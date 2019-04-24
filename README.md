@@ -40,5 +40,5 @@ This extension does not have any configuration are user interface. It is a libra
 
 ## Developer documentation
 
-* How to use this in an extension
+* [How to use this in an extension](docs/howto_use_in_your_extension.md)
 * [How to create your own field type](docs/add_your_own_field_type.md)
