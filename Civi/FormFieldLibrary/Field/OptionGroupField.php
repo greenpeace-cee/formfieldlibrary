@@ -88,7 +88,7 @@ class OptionGroupField extends AbstractField {
    * @return mixed
    */
   public function exportConfiguration($configuration) {
-    $option_group_name = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'name', array('id' => $configuration['option_group_id'])));
+    $option_group_name = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'name', 'id' => $configuration['option_group_id']));
     $configuration['option_group_id'] = $option_group_name;
     return $configuration;
   }
@@ -103,7 +103,7 @@ class OptionGroupField extends AbstractField {
    * @return mixed
    */
   public function importConfiguration($configuration) {
-    $option_group_id = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'id', array('name' => $configuration['option_group_id'])));
+    $option_group_id = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'id', 'name' => $configuration['option_group_id']));
     $configuration['option_group_id'] = $option_group_id;
     return $configuration;
   }
