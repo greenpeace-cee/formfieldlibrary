@@ -7,6 +7,7 @@
 namespace Civi\FormFieldLibrary\Field;
 
 use CRM_Formfieldlibrary_ExtensionUtil as E;
+use Dompdf\Exception;
 
 class MessageTemplate extends AbstractField {
 
@@ -64,6 +65,45 @@ class MessageTemplate extends AbstractField {
    */
   public function processConfiguration($submittedValues) {
     return array('default_template' => $submittedValues['default_template']);
+  }
+
+  /**
+   * Export a configuration.
+   *
+   * Use this function to manipulate the configuration which is exported.
+   * E.g. change option_group_id to a name and do the reverse on import.
+   *
+   * @param $configuration
+   * @return mixed
+   */
+  public function exportConfiguration($configuration) {
+    $template_title = civicrm_api3('MessageTemplate', 'getvalue', array('return' => 'msg_title', array('id' => $configuration['default_template'])));
+    $configuration['default_template'] = $template_title;
+    return $configuration;
+  }
+
+  /**
+   * Import a configuration.
+   *
+   * Use this function to manipulate the configuration which is imported.
+   * E.g. change option_group_name to an id.
+   *
+   * @param $configuration
+   * @return mixed
+   */
+  public function importConfiguration($configuration) {
+    if (isset($configuration['default_template'])) {
+      try {
+        $template_id = civicrm_api3('MessageTemplate', 'getvalue', [
+          'return' => 'id',
+          ['msg_title' => $configuration['default_template']]
+        ]);
+        $configuration['default_template'] = $template_id;
+      } catch (\Exception $e) {
+        // Do nothing.
+      }
+    }
+    return $configuration;
   }
 
 

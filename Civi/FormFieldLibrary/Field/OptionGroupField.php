@@ -79,6 +79,36 @@ class OptionGroupField extends AbstractField {
   }
 
   /**
+   * Export a configuration.
+   *
+   * Use this function to manipulate the configuration which is exported.
+   * E.g. change option_group_id to a name and do the reverse on import.
+   *
+   * @param $configuration
+   * @return mixed
+   */
+  public function exportConfiguration($configuration) {
+    $option_group_name = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'name', array('id' => $configuration['option_group_id'])));
+    $configuration['option_group_id'] = $option_group_name;
+    return $configuration;
+  }
+
+  /**
+   * Import a configuration.
+   *
+   * Use this function to manipulate the configuration which is imported.
+   * E.g. change option_group_name to an id.
+   *
+   * @param $configuration
+   * @return mixed
+   */
+  public function importConfiguration($configuration) {
+    $option_group_id = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'id', array('name' => $configuration['option_group_id'])));
+    $configuration['option_group_id'] = $option_group_id;
+    return $configuration;
+  }
+
+  /**
    * Add the field to the task form
    *
    * @param \CRM_Core_Form $form

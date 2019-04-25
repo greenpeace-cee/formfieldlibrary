@@ -63,6 +63,32 @@ abstract class AbstractField {
   }
 
   /**
+   * Export a configuration.
+   *
+   * Use this function to manipulate the configuration which is exported.
+   * E.g. change option_group_id to a name and do the reverse on import.
+   *
+   * @param $configuration
+   * @return mixed
+   */
+  public function exportConfiguration($configuration) {
+    return $configuration;
+  }
+
+  /**
+   * Import a configuration.
+   *
+   * Use this function to manipulate the configuration which is imported.
+   * E.g. change option_group_name to an id.
+   *
+   * @param $configuration
+   * @return mixed
+   */
+  public function importConfiguration($configuration) {
+    return $configuration;
+  }
+
+  /**
    * Add the field to the form
    *
    * @param \CRM_Core_Form $form
