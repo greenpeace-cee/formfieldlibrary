@@ -77,8 +77,13 @@ class MessageTemplate extends AbstractField {
    * @return mixed
    */
   public function exportConfiguration($configuration) {
-    $template_title = civicrm_api3('MessageTemplate', 'getvalue', array('return' => 'msg_title', 'id' => $configuration['default_template']));
-    $configuration['default_template'] = $template_title;
+    if (isset($configuration['default_template']) && $configuration['default_template']) {
+      $template_title = civicrm_api3('MessageTemplate', 'getvalue', [
+        'return' => 'msg_title',
+        'id' => $configuration['default_template']
+      ]);
+      $configuration['default_template'] = $template_title;
+    }
     return $configuration;
   }
 
