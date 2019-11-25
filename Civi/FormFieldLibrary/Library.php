@@ -15,6 +15,7 @@ class Library {
   private $fieldTitles = array();
 
   public function __construct() {
+    $this->addFieldType('date', 'Civi\FormFieldLibrary\Field\DateField', E::ts('Date field'));
     $this->addFieldType('text', 'Civi\FormFieldLibrary\Field\TextField', E::ts('Text field'));
     $this->addFieldType('option_group', 'Civi\FormFieldLibrary\Field\OptionGroupField', E::ts('Option Group'));
     $this->addFieldType('group', 'Civi\FormFieldLibrary\Field\GroupField', E::ts('Group'));
