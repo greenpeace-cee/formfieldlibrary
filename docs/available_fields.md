@@ -5,6 +5,7 @@ This extension provides the following fields.
 | Field | Description |
 |--- |---
 | Text Field | |
+| Contact Reference Field | This is a select field where the user can select a certain contact. |
 | Option Group Field | This field is rendered as a drop down and the options are the options from the selected option group |
 | Group Field | This field shows a drop down with all active groups, the groups in the drop down could be limited to a certain type |
 | Message Template | This field shows a drop down with all active message templates |
