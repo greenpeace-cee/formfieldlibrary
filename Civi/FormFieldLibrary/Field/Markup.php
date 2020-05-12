@@ -77,6 +77,11 @@ class Markup extends AbstractField {
       $is_required = $field['is_required'];
     }
 
+    $subjectField = $field['name'].'_subject';
+    if (!$field['configuration']['enable_subject']) {
+      $subjectField = '';
+    }
+
     //get the tokens.
     $tokens = \CRM_Core_SelectValues::contactTokens();
     //sorted in ascending order tokens by ignoring word case
@@ -91,7 +96,7 @@ class Markup extends AbstractField {
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge',
       'placeholder' => E::ts('- select -'),
-      'onChange' => "selectTemplate_{$field['name']}(this.value, '{$field['name']}_html_message', '', '{$field['name']}_subject');",
+      'onChange' => "selectTemplate_{$field['name']}(this.value, '{$field['name']}_html_message', '', '{$subjectField}');",
     ));
 
     $form->add('wysiwyg', $field['name'].'_html_message', E::ts('Message'), array('cols' => '80', 'rows' => '8'), $is_required);
@@ -99,7 +104,9 @@ class Markup extends AbstractField {
     if (!$field['configuration']['enable_subject']) {
       $subject_is_required = false;
     }
-    $form->add('text', $field['name'].'_subject', E::ts('Subject'), array('class' => 'huge'), $subject_is_required);
+    if ($subjectField) {
+      $form->add('text', $field['name'] . '_subject', E::ts('Subject'), ['class' => 'huge'], $subject_is_required);
+    }
   }
 
   /**
@@ -113,7 +120,22 @@ class Markup extends AbstractField {
   public function getSubmittedFieldValue($field, $submittedValues) {
     $return['message'] = $submittedValues[$field['name'].'_html_message'];
     $return['subject'] = isset($submittedValues[$field['name'].'_subject']) ? $submittedValues[$field['name'].'_subject'] : '';
+    $return['message_plain_text'] = \CRM_Utils_String::htmlToText($return['message']);
     return $return;
+  }
+
+  /**
+   * Return whether the field is submitted
+   *
+   * @param $field
+   * @param $subittedValues
+   * @return bool
+   */
+  public function isFieldValueSubmitted($field, $subittedValues) {
+    if (isset($subittedValues[$field['name'].'_html_message'])) {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -126,6 +148,7 @@ class Markup extends AbstractField {
   public function getOutputNames() {
     return array(
       'message' => E::ts('Message'),
+      'message_plain_text' => E::ts('Plain text message'),
       'subject' => E::ts('Subject'),
     );
   }

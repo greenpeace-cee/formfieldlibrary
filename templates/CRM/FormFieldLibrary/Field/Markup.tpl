@@ -46,7 +46,7 @@
     if (subject && document.getElementById(subject).length) {
       document.getElementById(subject).value ="";
     }
-    if (subject && document.getElementById(text_message).length) {
+    if (text_message && document.getElementById(text_message).length) {
       document.getElementById(text_message).value ="";
     }
     CRM.wysiwyg.setVal('#' + html_message, '');
@@ -56,7 +56,7 @@
         if (subject && document.getElementById(subject).length) {
           document.getElementById(subject).value = data.subject;
         }
-        if (subject && document.getElementById(text_message).length) {
+        if (text_message && document.getElementById(text_message).length) {
           document.getElementById(text_message).value = data.msg_text;
         }
         CRM.wysiwyg.setVal('#' + html_message, data.msg_html);
