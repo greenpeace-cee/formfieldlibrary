@@ -19,6 +19,7 @@ class Library {
     $this->addFieldType('text', 'Civi\FormFieldLibrary\Field\TextField', E::ts('Text field'));
     $this->addFieldType('contact', 'Civi\FormFieldLibrary\Field\ContactRefField', E::ts('Contact Reference field'));
     $this->addFieldType('option_group', 'Civi\FormFieldLibrary\Field\OptionGroupField', E::ts('Option Group'));
+    $this->addFieldType('participant_status', 'Civi\FormFieldLibrary\Field\ParticipantStatusField', E::ts('Participant Status'));
     $this->addFieldType('group', 'Civi\FormFieldLibrary\Field\GroupField', E::ts('Group'));
     $this->addFieldType('message_template', 'Civi\FormFieldLibrary\Field\MessageTemplate', E::ts('Message Template'));
     $this->addFieldType('markup', 'Civi\FormFieldLibrary\Field\Markup', E::ts('Markup / HTML'));
