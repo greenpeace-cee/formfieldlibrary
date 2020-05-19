@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/ajax/getoptiongroupvalues</path>
+    <page_callback>\Civi\FormFieldLibrary\Field\OptionGroupField::getOptionGroupValuesAJAX</page_callback>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>
