@@ -25,32 +25,42 @@ class OptionGroupField extends AbstractField {
    *
    * @param array $field
    */
-  public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
+  public function buildConfigurationForm(\CRM_Core_Form $form, $field=[]) {
     // Example add a checkbox to the form.
-    $option_group_api = civicrm_api3('OptionGroup', 'get', array('is_active' => 1, 'options' => array('limit' => 0)));
-    $option_groups = array();
+    $option_group_api = civicrm_api3('OptionGroup', 'get', ['is_active' => 1, 'options' => ['limit' => 0]]);
+    $option_groups = [];
     foreach($option_group_api['values'] as $option_group) {
       $option_groups[$option_group['id']] = $option_group['title'];
     }
-    $form->add('select', 'option_group_id', E::ts('Option Group'), $option_groups, true, array(
+    $form->add('select', 'option_group_id', E::ts('Option Group'), $option_groups, true, [
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge',
       'placeholder' => E::ts('- select -'),
-    ));
-    $form->add('select', 'value_attribute', E::ts('Value attribute'), array('value' => E::ts('Value'), 'id' => E::ts('Id')), true, array(
+    ]);
+    $form->add('select', 'value_attribute', E::ts('Value attribute'), ['value' => E::ts('Value'), 'id' => E::ts('Id')], true, [
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge',
       'placeholder' => E::ts('- select -'),
-    ));
+    ]);
+    $default_values = [];
     if (isset($field['configuration'])) {
-      $form->setDefaults(array(
+      $default_values = self::getOptionGroupValues($field['configuration']['option_group_id'], $field['configuration']['value_attribute']);
+    }
+    $form->add('select', 'default_value_id', E::ts('Default value'), $default_values, false, [
+      'style' => 'min-width:250px',
+      'class' => 'crm-select2 huge',
+      'placeholder' => E::ts('- select -'),
+    ]);
+    if (isset($field['configuration'])) {
+      $form->setDefaults([
         'option_group_id' => $field['configuration']['option_group_id'],
         'value_attribute' => $field['configuration']['value_attribute'],
-      ));
+        'default_value_id' => $field['configuration']['default_value_id'],
+      ]);
     } else {
-      $form->setDefaults(array(
+      $form->setDefaults([
         'value_attribute' => 'value',
-      ));
+      ]);
     }
   }
 
@@ -75,6 +85,7 @@ class OptionGroupField extends AbstractField {
     // Add the show_label to the configuration array.
     $configuration['option_group_id'] = $submittedValues['option_group_id'];
     $configuration['value_attribute'] = $submittedValues['value_attribute'];
+    $configuration['default_value_id'] = $submittedValues['default_value_id'];
     return $configuration;
   }
 
@@ -88,8 +99,12 @@ class OptionGroupField extends AbstractField {
    * @return mixed
    */
   public function exportConfiguration($configuration) {
-    $option_group_name = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'name', 'id' => $configuration['option_group_id']));
+    $option_group_name = civicrm_api3('OptionGroup', 'getvalue', ['return' => 'name', 'id' => $configuration['option_group_id']]);
     $configuration['option_group_id'] = $option_group_name;
+    if ($configuration['default_value_id']) {
+      $default_value_name = civicrm_api3('OptionValue', 'getvalue', ['return' => 'name', 'id' => $configuration['default_value_id']]);
+      $configuration['default_value_id'] = $default_value_name;
+    }
     return $configuration;
   }
 
@@ -103,8 +118,12 @@ class OptionGroupField extends AbstractField {
    * @return mixed
    */
   public function importConfiguration($configuration) {
-    $option_group_id = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'id', 'name' => $configuration['option_group_id']));
+    $option_group_id = civicrm_api3('OptionGroup', 'getvalue', ['return' => 'id', 'name' => $configuration['option_group_id']]);
     $configuration['option_group_id'] = $option_group_id;
+    if ($configuration['default_value_id']) {
+      $default_value_id = civicrm_api3('OptionValue', 'getvalue', ['return' => 'id', 'name' => $configuration['default_value_id']]);
+      $configuration['default_value_id'] = $default_value_id;
+    }
     return $configuration;
   }
 
@@ -119,17 +138,57 @@ class OptionGroupField extends AbstractField {
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
     }
-    $optionApi = civicrm_api3('OptionValue', 'get', array('option_group_id' => $field['configuration']['option_group_id'], 'is_active' => 1, 'options' => array('limit' => 0)));
-    $options = array();
-    foreach($optionApi['values'] as $option) {
-      $value_attr = $field['configuration']['value_attribute'];
-      $options[$option[$value_attr]] = $option['label'];
-    }
-    $form->add('select', $field['name'], $field['title'], $options, $is_required, array(
+    $options = self::getOptionGroupValues($field['configuration']['option_group_id'], $field['configuration']['value_attribute']);
+    $form->add('select', $field['name'], $field['title'], $options, $is_required, [
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge',
       'placeholder' => E::ts('- select -'),
-    ));
+    ]);
+    if (isset($field['configuration']) && isset($field['configuration']['default_value_id'])) {
+      $form->setDefaults([
+        $field['name'] => $field['configuration']['default_value_id'],
+      ]);
+    }
+
+  }
+
+  /**
+   * Get the option group values keyed by the specificied attribute
+   *
+   * @param $option_group_id
+   * @param $value_attr
+   *
+   * @return array option values
+   */
+  public static function getOptionGroupValues($option_group_id, $value_attr) {
+    $options = [];
+    if (!$option_group_id or !$value_attr) {
+      return $options;
+    }
+    $optionApi = civicrm_api3('OptionValue', 'get', [
+      'option_group_id' => $option_group_id,
+      'is_active' => 1,
+      'options' => ['limit' => 0]
+    ]);
+    foreach($optionApi['values'] as $option) {
+      $options[$option[$value_attr]] = $option['label'];
+    }
+    return $options;
+  }
+
+  /**
+   * AJAX function to return OptionGroup values
+   *
+   * Formatted ready for CRM.utils.setOptions
+   */
+  public static function getOptionGroupValuesAJAX() {
+    $option_group_id = \CRM_Utils_Request::retrieve('option_group_id', 'String');
+    $value_attr = \CRM_Utils_Request::retrieve('value_attr', 'String');
+    $options = [];
+    foreach (self::getOptionGroupValues($option_group_id, $value_attr) as $key => $value) {
+      $options[] = ['key' => $key, 'value' => $value];
+    }
+    \CRM_Utils_JSON::output($options);
   }
 
 }
