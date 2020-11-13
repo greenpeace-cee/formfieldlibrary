@@ -17,6 +17,8 @@ class Library {
   public function __construct() {
     $this->addFieldType('date', 'Civi\FormFieldLibrary\Field\DateField', E::ts('Date field'));
     $this->addFieldType('text', 'Civi\FormFieldLibrary\Field\TextField', E::ts('Text field'));
+    $this->addFieldType('money', 'Civi\FormFieldLibrary\Field\MoneyField', E::ts('Money field'));
+    $this->addFieldType('checkbox', 'Civi\FormFieldLibrary\Field\CheckboxField', E::ts('Checkbox field'));
     $this->addFieldType('contact', 'Civi\FormFieldLibrary\Field\ContactRefField', E::ts('Contact Reference field'));
     $this->addFieldType('option_group', 'Civi\FormFieldLibrary\Field\OptionGroupField', E::ts('Option Group'));
     $this->addFieldType('participant_status', 'Civi\FormFieldLibrary\Field\ParticipantStatusField', E::ts('Participant Status'));
