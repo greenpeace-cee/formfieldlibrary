@@ -43,20 +43,20 @@
 {literal}
 <script type="text/javascript">
   function selectTemplate_{/literal}{$field_name}{literal}( val, html_message, text_message, subject) {
-    if (subject && document.getElementById(subject).length) {
+    if (subject) {
       document.getElementById(subject).value ="";
     }
-    if (text_message && document.getElementById(text_message).length) {
+    if (text_message) {
       document.getElementById(text_message).value ="";
     }
     CRM.wysiwyg.setVal('#' + html_message, '');
 
     if (val) {
       CRM.api3('MessageTemplate', 'getsingle', {"id": val}).then(function (data) {
-        if (subject && document.getElementById(subject).length) {
-          document.getElementById(subject).value = data.subject;
+        if (subject) {
+          document.getElementById(subject).value = data.msg_subject;
         }
-        if (text_message && document.getElementById(text_message).length) {
+        if (text_message) {
           document.getElementById(text_message).value = data.msg_text;
         }
         CRM.wysiwyg.setVal('#' + html_message, data.msg_html);
