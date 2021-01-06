@@ -99,10 +99,12 @@ class OptionGroupField extends AbstractField {
    * @return mixed
    */
   public function exportConfiguration($configuration) {
+    $option_group_id = $configuration['option_group_id'];
     $option_group_name = civicrm_api3('OptionGroup', 'getvalue', ['return' => 'name', 'id' => $configuration['option_group_id']]);
     $configuration['option_group_id'] = $option_group_name;
+    $value_attribute = $configuration['value_attribute'];
     if ($configuration['default_value_id']) {
-      $default_value_name = civicrm_api3('OptionValue', 'getvalue', ['return' => 'name', 'id' => $configuration['default_value_id']]);
+      $default_value_name = civicrm_api3('OptionValue', 'getvalue', ['return' => 'name', $value_attribute => $configuration['default_value_id'], 'option_group_id' => $option_group_id]);
       $configuration['default_value_id'] = $default_value_name;
     }
     return $configuration;
@@ -120,8 +122,9 @@ class OptionGroupField extends AbstractField {
   public function importConfiguration($configuration) {
     $option_group_id = civicrm_api3('OptionGroup', 'getvalue', ['return' => 'id', 'name' => $configuration['option_group_id']]);
     $configuration['option_group_id'] = $option_group_id;
+    $value_attribute = $configuration['value_attribute'];
     if ($configuration['default_value_id']) {
-      $default_value_id = civicrm_api3('OptionValue', 'getvalue', ['return' => 'id', 'name' => $configuration['default_value_id']]);
+      $default_value_id = civicrm_api3('OptionValue', 'getvalue', ['return' => $value_attribute, 'name' => $configuration['default_value_id'], 'option_group_id' => $option_group_id]);
       $configuration['default_value_id'] = $default_value_id;
     }
     return $configuration;
