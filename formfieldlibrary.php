@@ -12,7 +12,9 @@ use Symfony\Component\DependencyInjection\Definition;
  */
 function formfieldlibrary_civicrm_container(ContainerBuilder $container) {
   // Register the TypeFactory
-  $container->setDefinition('formfieldlibrary', new Definition('Civi\FormFieldLibrary\Library'));
+  $definition = new Definition('Civi\FormFieldLibrary\Library');
+  $definition->setPrivate(FALSE);
+  $container->setDefinition('formfieldlibrary', $definition);
 }
 
 
