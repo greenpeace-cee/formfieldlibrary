@@ -13,7 +13,10 @@ use Symfony\Component\DependencyInjection\Definition;
 function formfieldlibrary_civicrm_container(ContainerBuilder $container) {
   // Register the TypeFactory
   $definition = new Definition('Civi\FormFieldLibrary\Library');
-  $definition->setPrivate(FALSE);
+  $definition->setPublic(true);
+  if (method_exists(Definition::class, 'setPrivate')) {
+    $definition->setPrivate(FALSE);
+  }
   $container->setDefinition('formfieldlibrary', $definition);
 }
 
