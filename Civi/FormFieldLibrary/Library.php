@@ -25,6 +25,7 @@ class Library {
     $this->addFieldType('group', 'Civi\FormFieldLibrary\Field\GroupField', E::ts('Group'));
     $this->addFieldType('message_template', 'Civi\FormFieldLibrary\Field\MessageTemplate', E::ts('Message Template'));
     $this->addFieldType('markup', 'Civi\FormFieldLibrary\Field\Markup', E::ts('Markup / HTML'));
+    $this->addFieldType('fromemail', 'Civi\FormFieldLibrary\Field\FromEmailField', E::ts('From Email'));
   }
 
 
