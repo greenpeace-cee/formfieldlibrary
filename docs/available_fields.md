@@ -9,6 +9,7 @@ This extension provides the following fields.
 | Contact Reference Field | This is a select field where the user can select a certain contact. |
 | Option Group Field | This field is rendered as a drop down and the options are the options from the selected option group |
 | Group Field | This field shows a drop down with all active groups, the groups in the drop down could be limited to a certain type |
+| From Email | All the from email addresses defined in CiviMail -> From Email Addresses |
 | Message Template | This field shows a drop down with all active message templates |
 
 Ps. You can also develop your own fields, see [here for instructions](add_your_own_field_type.md)
