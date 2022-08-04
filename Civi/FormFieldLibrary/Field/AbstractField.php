@@ -134,6 +134,19 @@ abstract class AbstractField {
   }
 
   /**
+   * Method is called as soon as a batch action is finished.
+   * Child classes can do clean up in this method.
+   *
+   * @param $field
+   * @param $submittedValues
+   *
+   * @return void
+   */
+  public function onBatchFinished($field, $submittedValues) {
+    // Do nothing.
+  }
+
+  /**
    * Returns all the names of the possible outputs of this field.
    * Most fields would return one value. But for example a date and time field
    * returns the date value and time value.
