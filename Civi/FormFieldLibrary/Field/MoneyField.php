@@ -6,17 +6,17 @@
 
 namespace Civi\FormFieldLibrary\Field;
 
-use CRM_Formfieldlibrary_ExtensionUtil as E;
+use CRM_Core_Form;
 
 class MoneyField extends AbstractField {
 
   /**
    * Add the field to the form
    *
-   * @param \CRM_Core_Form $form
+   * @param CRM_Core_Form $form
    * @param $field
    */
-  public function addFieldToForm(\CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field) {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];

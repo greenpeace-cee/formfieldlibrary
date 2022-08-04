@@ -6,8 +6,10 @@
 
 namespace Civi\FormFieldLibrary\Field;
 
+use CiviCRM_API3_Exception;
+use CRM_Core_Exception;
+use CRM_Core_Form;
 use CRM_Formfieldlibrary_ExtensionUtil as E;
-use Dompdf\Exception;
 
 class MessageTemplate extends AbstractField {
 
@@ -16,7 +18,7 @@ class MessageTemplate extends AbstractField {
    *
    * @return bool
    */
-  public function hasConfiguration() {
+  public function hasConfiguration(): bool {
     return true;
   }
 
@@ -24,21 +26,30 @@ class MessageTemplate extends AbstractField {
    * When this field type has additional configuration you can add
    * the fields on the form with this function.
    *
-   * @param \CRM_Core_Form $form
+   * @param CRM_Core_Form $form
    * @param array $field
-   * @throws \Exception
    */
-  public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
-    $message_template_api = civicrm_api3('MessageTemplate', 'get', array('is_active' => 1, 'workflow_id' => array("IS NULL" => 1), 'options' => array('limit' => 0)));
-    $message_templates = array();
-    foreach($message_template_api['values'] as $message_template) {
-      $message_templates[$message_template['id']] = $message_template['msg_title'];
+  public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    $message_templates = [];
+    try {
+      $message_template_api = civicrm_api3('MessageTemplate', 'get', [
+        'is_active' => 1,
+        'workflow_id' => ["IS NULL" => 1],
+        'options' => ['limit' => 0],
+      ]);
+      foreach ($message_template_api['values'] as $message_template) {
+        $message_templates[$message_template['id']] = $message_template['msg_title'];
+      }
+    } catch (CiviCRM_API3_Exception $e) {
     }
-    $form->add('select', 'default_template', E::ts('Default template'), $message_templates, false, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- select -'),
-    ));
+    try {
+      $form->add('select', 'default_template', E::ts('Default template'), $message_templates, FALSE, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- select -'),
+      ]);
+    } catch (CRM_Core_Exception $e) {
+    }
     if (isset($field['configuration'])) {
       $form->setDefaults(array(
         'default_template' => $field['configuration']['default_template'],
@@ -52,7 +63,7 @@ class MessageTemplate extends AbstractField {
    *
    * @return false|string
    */
-  public function getConfigurationTemplateFileName() {
+  public function getConfigurationTemplateFileName(): ?string {
     return "CRM/FormFieldLibrary/Form/Configuration/MessageTemplate.tpl";
   }
 
@@ -60,10 +71,10 @@ class MessageTemplate extends AbstractField {
   /**
    * Process the submitted values and create a configuration array
    *
-   * @param $submittedValues   *
+   * @param $submittedValues
    * @return array
    */
-  public function processConfiguration($submittedValues) {
+  public function processConfiguration($submittedValues): array {
     return array('default_template' => $submittedValues['default_template']);
   }
 
@@ -78,11 +89,14 @@ class MessageTemplate extends AbstractField {
    */
   public function exportConfiguration($configuration) {
     if (isset($configuration['default_template']) && $configuration['default_template']) {
-      $template_title = civicrm_api3('MessageTemplate', 'getvalue', [
-        'return' => 'msg_title',
-        'id' => $configuration['default_template']
-      ]);
-      $configuration['default_template'] = $template_title;
+      try {
+        $template_title = civicrm_api3('MessageTemplate', 'getvalue', [
+          'return' => 'msg_title',
+          'id' => $configuration['default_template'],
+        ]);
+        $configuration['default_template'] = $template_title;
+      } catch (CiviCRM_API3_Exception $e) {
+      }
     }
     return $configuration;
   }
@@ -101,7 +115,7 @@ class MessageTemplate extends AbstractField {
       try {
         $template_id = civicrm_api3('MessageTemplate', 'getvalue', array('return' => 'id', 'msg_title' => $configuration['default_template']));
         $configuration['default_template'] = $template_id;
-      } catch (\Exception $e) {
+      } catch (CiviCRM_API3_Exception $e) {
         // Do nothing.
       }
     }
@@ -112,26 +126,35 @@ class MessageTemplate extends AbstractField {
   /**
    * Add the field to the form
    *
-   * @param \CRM_Core_Form $form
+   * @param CRM_Core_Form $form
    * @param $field
-   * @throws \Exception
    */
-  public function addFieldToForm(\CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field) {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
     }
 
-    $message_template_api = civicrm_api3('MessageTemplate', 'get', array('is_active' => 1, 'workflow_id' => array("IS NULL" => 1), 'options' => array('limit' => 0)));
-    $message_templates = array();
-    foreach($message_template_api['values'] as $message_template) {
-      $message_templates[$message_template['id']] = $message_template['msg_title'];
+    $message_templates = [];
+    try {
+      $message_template_api = civicrm_api3('MessageTemplate', 'get', [
+        'is_active' => 1,
+        'workflow_id' => ["IS NULL" => 1],
+        'options' => ['limit' => 0],
+      ]);
+      foreach ($message_template_api['values'] as $message_template) {
+        $message_templates[$message_template['id']] = $message_template['msg_title'];
+      }
+    } catch (CiviCRM_API3_Exception $e) {
     }
-    $form->add('select', $field['name'], $field['title'], $message_templates, $is_required, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- select -'),
-    ));
+    try {
+      $form->add('select', $field['name'], $field['title'], $message_templates, $is_required, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- select -'),
+      ]);
+    } catch (CRM_Core_Exception $e) {
+    }
     if (isset($field['configuration']) && isset($field['configuration']['default_template'])) {
       $form->setDefaults(array(
         $field['name'] => $field['configuration']['default_template'],
@@ -145,19 +168,21 @@ class MessageTemplate extends AbstractField {
    * @param $field
    * @param $submittedValues
    * @return array
-   * @throws \Exception
    */
-  public function getSubmittedFieldValue($field, $submittedValues) {
+  public function getSubmittedFieldValue($field, $submittedValues): array {
     $messageTemplateId = $submittedValues[$field['name']];
     $return['id'] = $messageTemplateId;
-    $messageTemplate = civicrm_api3('MessageTemplate', 'getsingle', array('id' => $messageTemplateId));
-    $return['subject'] = isset($messageTemplate['msg_subject']) ? $messageTemplate['msg_subject'] : '';
-    $return['html_body'] = isset($messageTemplate['msg_html']) ? $messageTemplate['msg_html'] : '';
-    $return['text_body'] = isset($messageTemplate['msg_text']) ? $messageTemplate['msg_text'] : '';
-    if (isset($messageTemplate['msg_html']) && !empty($messageTemplate['msg_html'])) {
-      $return['body'] = $messageTemplate['msg_html'];
-    } elseif (isset($messageTemplate['msg_text']) && !empty($messageTemplate['msg_text'])) {
-      $return['body'] = $messageTemplate['msg_text'];
+    try {
+      $messageTemplate = civicrm_api3('MessageTemplate', 'getsingle', ['id' => $messageTemplateId]);
+      $return['subject'] = $messageTemplate['msg_subject'] ?? '';
+      $return['html_body'] = $messageTemplate['msg_html'] ?? '';
+      $return['text_body'] = $messageTemplate['msg_text'] ?? '';
+      if (isset($messageTemplate['msg_html']) && !empty($messageTemplate['msg_html'])) {
+        $return['body'] = $messageTemplate['msg_html'];
+      } elseif (isset($messageTemplate['msg_text']) && !empty($messageTemplate['msg_text'])) {
+        $return['body'] = $messageTemplate['msg_text'];
+      }
+    } catch (CiviCRM_API3_Exception $e) {
     }
     return $return;
   }
@@ -169,16 +194,14 @@ class MessageTemplate extends AbstractField {
    *
    * @return array
    */
-  public function getOutputNames() {
-    return array(
+  public function getOutputNames(): array {
+    return [
       'body' => E::ts('Message'),
       'html_body' => E::ts('HTML Message'),
       'text_body' => E::ts('Text Message'),
       'subject' => E::ts('Subject'),
       'id' => E::ts('ID'),
-    );
+    ];
   }
-
-
 
 }

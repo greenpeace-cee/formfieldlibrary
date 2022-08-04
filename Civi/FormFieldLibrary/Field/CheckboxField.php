@@ -6,6 +6,8 @@
 
 namespace Civi\FormFieldLibrary\Field;
 
+use CRM_Core_Exception;
+use CRM_Core_Form;
 use CRM_Formfieldlibrary_ExtensionUtil as E;
 
 class CheckboxField extends AbstractField {
@@ -13,17 +15,20 @@ class CheckboxField extends AbstractField {
   /**
    * Add the field to the form
    *
-   * @param \CRM_Core_Form $form
+   * @param CRM_Core_Form $form
    * @param $field
    */
-  public function addFieldToForm(\CRM_Core_Form $form, $field) {
-    $config = \CRM_Core_Config::singleton();
+  public function addFieldToForm(CRM_Core_Form $form, $field) {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
     }
     $prop['time'] = FALSE;
-    $form->add('checkbox', $field['name'], $field['title'], array(), $is_required, $prop);
+    try {
+      $form->add('checkbox', $field['name'], $field['title'], [], $is_required, $prop);
+    } catch (CRM_Core_Exception $e) {
+      return;
+    }
 
     if (isset($field['configuration']['default_checked'])) {
       $form->setDefaults(array(
@@ -37,7 +42,7 @@ class CheckboxField extends AbstractField {
    *
    * @return bool
    */
-  public function hasConfiguration() {
+  public function hasConfiguration(): bool {
     return true;
   }
 
@@ -47,10 +52,12 @@ class CheckboxField extends AbstractField {
    *
    * @param \CRM_Core_Form $form
    * @param array $field
-   * @throws \Exception
    */
-  public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
-    $form->add('checkbox', 'default_checked', E::ts('Default Checked'), array(), false);
+  public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    try {
+      $form->add('checkbox', 'default_checked', E::ts('Default Checked'), []);
+    } catch (CRM_Core_Exception $e) {
+    }
     if (isset($field['configuration'])) {
       $form->setDefaults(array(
         'default_checked' => $field['configuration']['default_checked'],
@@ -64,7 +71,7 @@ class CheckboxField extends AbstractField {
    *
    * @return false|string
    */
-  public function getConfigurationTemplateFileName() {
+  public function getConfigurationTemplateFileName(): ?string {
     return "CRM/FormFieldLibrary/Form/Configuration/CheckboxField.tpl";
   }
 
@@ -75,8 +82,8 @@ class CheckboxField extends AbstractField {
    * @param $submittedValues   *
    * @return array
    */
-  public function processConfiguration($submittedValues) {
-    return array('default_checked' => $submittedValues['default_checked']);
+  public function processConfiguration($submittedValues): array {
+    return ['default_checked' => $submittedValues['default_checked']];
   }
 
   /**
@@ -86,12 +93,12 @@ class CheckboxField extends AbstractField {
    * @param $submittedValues
    * @return array
    */
-  public function getSubmittedFieldValue($field, $submittedValues) {
+  public function getSubmittedFieldValue($field, $submittedValues): array {
     $value = false;
     if (!empty($submittedValues[$field['name']])) {
       $value = true;
     }
-    return array('value' => $value);
+    return ['value' => $value];
   }
 
 }

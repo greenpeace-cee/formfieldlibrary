@@ -6,6 +6,9 @@
 
 namespace Civi\FormFieldLibrary\Field;
 
+use CiviCRM_API3_Exception;
+use CRM_Core_Exception;
+use CRM_Core_Form;
 use CRM_Formfieldlibrary_ExtensionUtil as E;
 
 class GroupField extends AbstractField {
@@ -15,7 +18,7 @@ class GroupField extends AbstractField {
    *
    * @return bool
    */
-  public function hasConfiguration() {
+  public function hasConfiguration(): bool {
     return true;
   }
 
@@ -23,21 +26,32 @@ class GroupField extends AbstractField {
    * When this field type has additional configuration you can add
    * the fields on the form with this function.
    *
+   * @param CRM_Core_Form $form
    * @param array $field
    */
-  public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
+  public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
     // Add a drop down for group type
-    $group_type_api = civicrm_api3('OptionValue', 'get', array('is_active' => 1, 'option_group_id' => 'group_type', 'options' => array('limit' => 0)));
-    $group_types = array();
-    foreach($group_type_api['values'] as $group_type) {
-      $group_types[$group_type['value']] = $group_type['label'];
+    $group_types = [];
+    try {
+      $group_type_api = civicrm_api3('OptionValue', 'get', [
+        'is_active' => 1,
+        'option_group_id' => 'group_type',
+        'options' => ['limit' => 0],
+      ]);
+      foreach($group_type_api['values'] as $group_type) {
+        $group_types[$group_type['value']] = $group_type['label'];
+      }
+    } catch (CiviCRM_API3_Exception $e) {
     }
-    $form->add('select', 'group_type', E::ts('Group Type'), $group_types, false, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- All Group Types -'),
-      'multiple' => true,
-    ));
+    try {
+      $form->add('select', 'group_type', E::ts('Group Type'), $group_types, FALSE, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- All Group Types -'),
+        'multiple' => TRUE,
+      ]);
+    } catch (CRM_Core_Exception $e) {
+    }
     if (isset($field['configuration'])) {
       $form->setDefaults(array(
         'group_type' => $field['configuration']['group_type'],
@@ -48,10 +62,10 @@ class GroupField extends AbstractField {
   /**
    * Process the submitted values and create a configuration array
    *
-   * @param $submittedValues   *
+   * @param $submittedValues
    * @return array
    */
-  public function processConfiguration($submittedValues) {
+  public function processConfiguration($submittedValues): array {
     // Add the show_label to the configuration array.
     $configuration['group_type'] = $submittedValues['group_type'];
     return $configuration;
@@ -63,37 +77,43 @@ class GroupField extends AbstractField {
    *
    * @return false|string
    */
-  public function getConfigurationTemplateFileName() {
+  public function getConfigurationTemplateFileName(): ?string {
     return "CRM/FormFieldLibrary/Form/Configuration/GroupTypeField.tpl";
   }
 
   /**
    * Add the field to the task form
    *
-   * @param \CRM_Core_Form $form
+   * @param CRM_Core_Form $form
    * @param $field
    */
-  public function addFieldToForm(\CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field) {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
     }
 
+    $groups = [];
     $groupApiParams['is_active'] = 1;
     if (isset($field['configuration']['group_type']) && is_array($field['configuration']['group_type'])) {
       $groupApiParams['group_type'] = array('IN' => $field['configuration']['group_type']);
     }
     $groupApiParams['options']['limit'] = 0;
-    $groupApi = civicrm_api3('Group', 'get', $groupApiParams);
-    $groups = array();
-    foreach($groupApi['values'] as $group) {
-      $groups[$group['id']] = $group['title'];
+    try {
+      $groupApi = civicrm_api3('Group', 'get', $groupApiParams);
+      foreach($groupApi['values'] as $group) {
+        $groups[$group['id']] = $group['title'];
+      }
+    } catch (CiviCRM_API3_Exception $e) {
     }
-    $form->add('select', $field['name'], $field['title'], $groups, $is_required, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- select -'),
-    ));
+    try {
+      $form->add('select', $field['name'], $field['title'], $groups, $is_required, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- select -'),
+      ]);
+    } catch (CRM_Core_Exception $e) {
+    }
   }
 
 

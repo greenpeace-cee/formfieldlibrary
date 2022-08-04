@@ -5,6 +5,9 @@
  */
 namespace Civi\FormFieldLibrary\Field;
 
+use CiviCRM_API3_Exception;
+use CRM_Core_Exception;
+use CRM_Core_Form;
 use CRM_Formfieldlibrary_ExtensionUtil as E;
 
 class FromEmailField extends AbstractField {
@@ -14,39 +17,45 @@ class FromEmailField extends AbstractField {
    *
    * @return bool
    */
-  public function hasConfiguration() {
+  public function hasConfiguration(): bool {
     return false;
   }
 
   /**
    * Add the field to the task form
    *
-   * @param \CRM_Core_Form $form
+   * @param CRM_Core_Form $form
    * @param $field
    */
-  public function addFieldToForm(\CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field) {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
     }
-    $fromemail_api = civicrm_api3('OptionValue', 'get', [
-      'is_active' => 1,
-      'option_group_id' => "from_email_address",
-      'options' => ['limit' => 0],
-    ]);
     $from_email = [];
     $default_value = NULL;
-    foreach($fromemail_api['values'] as $value) {
-      $from_email[$value['id']] =  htmlentities($value['label']);
-      if($value['is_default']){
-        $default_value = $value['id'];
+    try {
+      $fromemail_api = civicrm_api3('OptionValue', 'get', [
+        'is_active' => 1,
+        'option_group_id' => "from_email_address",
+        'options' => ['limit' => 0],
+      ]);
+      foreach($fromemail_api['values'] as $value) {
+        $from_email[$value['id']] =  htmlentities($value['label']);
+        if($value['is_default']){
+          $default_value = $value['id'];
+        }
       }
+    } catch (CiviCRM_API3_Exception $e) {
     }
-    $form->add('select',  $field['name'], $field['title'], $from_email, $is_required, [
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- select -'),
-    ]);
+    try {
+      $form->add('select', $field['name'], $field['title'], $from_email, $is_required, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- select -'),
+      ]);
+    } catch (CRM_Core_Exception $e) {
+    }
     $form->setDefaults(array(
       $field['name'] => $default_value,
     ));
@@ -58,13 +67,16 @@ class FromEmailField extends AbstractField {
    * @param $field
    * @param $submittedValues
    * @return array
-   * @throws \Exception
    */
-  public function getSubmittedFieldValue($field, $submittedValues) {
+  public function getSubmittedFieldValue($field, $submittedValues): array {
+    $return = [];
     $fromEmailId = $submittedValues[$field['name']];
-    $completeEmail = civicrm_api3('OptionValue', 'getsingle', ['id' => $fromEmailId])['label'];
-    $return['from_email'] = $this->pluckEmail($completeEmail);
-    $return['from_name']  = $this->pluckName($completeEmail);
+    try {
+      $completeEmail = civicrm_api3('OptionValue', 'getsingle', ['id' => $fromEmailId])['label'];
+      $return['from_email'] = $this->pluckEmail($completeEmail);
+      $return['from_name']  = $this->pluckName($completeEmail);
+    } catch (CiviCRM_API3_Exception $e) {
+    }
     return $return;
   }
 
@@ -75,11 +87,11 @@ class FromEmailField extends AbstractField {
    *
    * @return array
    */
-  public function getOutputNames() {
-    return array(
+  public function getOutputNames(): array {
+    return [
       'from_email' => E::ts('Email'),
       'from_name' => E::ts('Name'),
-    );
+    ];
   }
 
   public function pluckEmail($header) {

@@ -6,6 +6,9 @@
 
 namespace Civi\FormFieldLibrary\Field;
 
+use CiviCRM_API3_Exception;
+use CRM_Core_Exception;
+use CRM_Core_Form;
 use CRM_Formfieldlibrary_ExtensionUtil as E;
 
 class ParticipantStatusField extends AbstractField {
@@ -15,7 +18,7 @@ class ParticipantStatusField extends AbstractField {
    *
    * @return bool
    */
-  public function hasConfiguration() {
+  public function hasConfiguration(): bool {
     return true;
   }
 
@@ -23,19 +26,29 @@ class ParticipantStatusField extends AbstractField {
    * When this field type has additional configuration you can add
    * the fields on the form with this function.
    *
+   * @param CRM_Core_Form $form
    * @param array $field
    */
-  public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
-    $optionApi = civicrm_api3('ParticipantStatusType', 'get', array('is_active' => 1, 'options' => array('limit' => 0)));
-    $options = array();
-    foreach($optionApi['values'] as $option) {
-      $options[$option['id']] = $option['label'];
+  public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    $options = [];
+    try {
+      $optionApi = civicrm_api3('ParticipantStatusType', 'get', [
+        'is_active' => 1,
+        'options' => ['limit' => 0],
+      ]);
+      foreach($optionApi['values'] as $option) {
+        $options[$option['id']] = $option['label'];
+      }
+    } catch (CiviCRM_API3_Exception $e) {
     }
-    $form->add('select', 'default_status_id', E::ts('Default Participant Status'), $options, false, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- select -'),
-    ));
+    try {
+      $form->add('select', 'default_status_id', E::ts('Default Participant Status'), $options, FALSE, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- select -'),
+      ]);
+    } catch (CRM_Core_Exception $e) {
+    }
     if (isset($field['configuration'])) {
       $form->setDefaults(array(
         'default_status_id' => $field['configuration']['default_status_id'],
@@ -49,7 +62,7 @@ class ParticipantStatusField extends AbstractField {
    *
    * @return false|string
    */
-  public function getConfigurationTemplateFileName() {
+  public function getConfigurationTemplateFileName(): ?string {
     return "CRM/FormFieldLibrary/Form/Configuration/ParticipantStatusField.tpl";
   }
 
@@ -60,7 +73,7 @@ class ParticipantStatusField extends AbstractField {
    * @param $submittedValues
    * @return array
    */
-  public function processConfiguration($submittedValues) {
+  public function processConfiguration($submittedValues): array {
     // Add the show_label to the configuration array.
     $configuration['default_status_id'] = $submittedValues['default_status_id'];
     return $configuration;
@@ -76,8 +89,14 @@ class ParticipantStatusField extends AbstractField {
    * @return mixed
    */
   public function exportConfiguration($configuration) {
-    $status_name = civicrm_api3('ParticipantStatusType', 'getvalue', array('return' => 'name', 'id' => $configuration['default_status_id']));
-    $configuration['default_status_id'] = $status_name;
+    try {
+      $status_name = civicrm_api3('ParticipantStatusType', 'getvalue', [
+        'return' => 'name',
+        'id' => $configuration['default_status_id'],
+      ]);
+      $configuration['default_status_id'] = $status_name;
+    } catch (CiviCRM_API3_Exception $e) {
+    }
     return $configuration;
   }
 
@@ -91,8 +110,14 @@ class ParticipantStatusField extends AbstractField {
    * @return mixed
    */
   public function importConfiguration($configuration) {
-    $status_id = civicrm_api3('ParticipantStatusType', 'getvalue', array('return' => 'id', 'name' => $configuration['default_status_id']));
-    $configuration['default_status_id'] = $status_id;
+    try {
+      $status_id = civicrm_api3('ParticipantStatusType', 'getvalue', [
+        'return' => 'id',
+        'name' => $configuration['default_status_id'],
+      ]);
+      $configuration['default_status_id'] = $status_id;
+    } catch (CiviCRM_API3_Exception $e) {
+    }
     return $configuration;
   }
 
@@ -102,21 +127,30 @@ class ParticipantStatusField extends AbstractField {
    * @param \CRM_Core_Form $form
    * @param $field
    */
-  public function addFieldToForm(\CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field) {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
     }
-    $optionApi = civicrm_api3('ParticipantStatusType', 'get', array('is_active' => 1, 'options' => array('limit' => 0)));
-    $options = array();
-    foreach($optionApi['values'] as $option) {
-      $options[$option['id']] = $option['label'];
+    $options = [];
+    try {
+      $optionApi = civicrm_api3('ParticipantStatusType', 'get', [
+        'is_active' => 1,
+        'options' => ['limit' => 0],
+      ]);
+      foreach($optionApi['values'] as $option) {
+        $options[$option['id']] = $option['label'];
+      }
+    } catch (CiviCRM_API3_Exception $e) {
     }
-    $form->add('select', $field['name'], $field['title'], $options, $is_required, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- select -'),
-    ));
+    try {
+      $form->add('select', $field['name'], $field['title'], $options, $is_required, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- select -'),
+      ]);
+    } catch (CRM_Core_Exception $e) {
+    }
     if (isset($field['configuration'])) {
       $form->setDefaults(array(
         $field['name'] => $field['configuration']['default_status_id'],

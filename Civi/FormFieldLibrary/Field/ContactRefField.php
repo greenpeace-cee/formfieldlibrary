@@ -6,6 +6,9 @@
 
 namespace Civi\FormFieldLibrary\Field;
 
+use CiviCRM_API3_Exception;
+use CRM_Core_Exception;
+use CRM_Core_Form;
 use CRM_Formfieldlibrary_ExtensionUtil as E;
 
 class ContactRefField extends AbstractField {
@@ -13,10 +16,10 @@ class ContactRefField extends AbstractField {
   /**
    * Add the field to the form
    *
-   * @param \CRM_Core_Form $form
+   * @param CRM_Core_Form $form
    * @param $field
    */
-  public function addFieldToForm(\CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field) {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -66,7 +69,7 @@ class ContactRefField extends AbstractField {
    *
    * @return bool
    */
-  public function hasConfiguration() {
+  public function hasConfiguration(): bool {
     return true;
   }
 
@@ -74,36 +77,53 @@ class ContactRefField extends AbstractField {
    * When this field type has additional configuration you can add
    * the fields on the form with this function.
    *
+   * @param CRM_Core_Form $form
    * @param array $field
    */
-  public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
-    $groupsApi = civicrm_api3('Group', 'get', array('is_active' => 1, 'options' => array('limit' => 0)));
+  public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    try {
+      $groupsApi = civicrm_api3('Group', 'get', [
+        'is_active' => 1,
+        'options' => ['limit' => 0],
+      ]);
+    } catch (CiviCRM_API3_Exception $e) {
+      return;
+    }
     $groups = array();
     foreach($groupsApi['values'] as $group) {
       $groups[$group['id']] = $group['title'];
     }
-    $form->add('select', 'limit_groups', E::ts('Limit to Contacts in group(s)'), $groups, false, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- Show all groups -'),
-      'multiple' => true,
-    ));
-
-    $contactTypesApi = civicrm_api3('ContactType', 'get',array('is_active' => 1, 'options' => array('limit' => 0)));
-    $contactTypes = array();
-    foreach($contactTypesApi['values'] as $contactType) {
-      $contactTypeName = $contactType['name'];
-      if (isset($contactType['parent_id']) && $contactType['parent_id']) {
-        $contactTypeName = 'sub_'. $contactTypeName;
-      }
-      $contactTypes[$contactTypeName] = $contactType['label'];
+    try {
+      $form->add('select', 'limit_groups', E::ts('Limit to Contacts in group(s)'), $groups, FALSE, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- Show all groups -'),
+        'multiple' => TRUE,
+      ]);
+    } catch (CRM_Core_Exception $e) {
     }
-    $form->add('select', 'limit_contact_types', E::ts('Limit to Contact Type(s)'), $contactTypes, false, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- All contact types -'),
-      'multiple' => true,
-    ));
+
+    try {
+      $contactTypesApi = civicrm_api3('ContactType', 'get', [
+        'is_active' => 1,
+        'options' => ['limit' => 0],
+      ]);
+      $contactTypes = [];
+      foreach($contactTypesApi['values'] as $contactType) {
+        $contactTypeName = $contactType['name'];
+        if (isset($contactType['parent_id']) && $contactType['parent_id']) {
+          $contactTypeName = 'sub_' . $contactTypeName;
+        }
+        $contactTypes[$contactTypeName] = $contactType['label'];
+      }
+      $form->add('select', 'limit_contact_types', E::ts('Limit to Contact Type(s)'), $contactTypes, FALSE, [
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge',
+        'placeholder' => E::ts('- All contact types -'),
+        'multiple' => TRUE,
+      ]);
+    } catch (CRM_Core_Exception $e) {
+    }
 
     $api_params = array();
     $props = array(
@@ -115,7 +135,7 @@ class ContactRefField extends AbstractField {
       'style' => 'min-width: 250px;',
       'class' => 'huge',
     );
-    $form->addEntityRef( 'default_contact', E::ts('Default Contact'), $props, false);
+    $form->addEntityRef( 'default_contact', E::ts('Default Contact'), $props);
 
     if (isset($field['configuration'])) {
       $configuration = $field['configuration'];
@@ -140,7 +160,7 @@ class ContactRefField extends AbstractField {
    *
    * @return false|string
    */
-  public function getConfigurationTemplateFileName() {
+  public function getConfigurationTemplateFileName(): ?string {
     return "CRM/FormFieldLibrary/Form/Configuration/ContactRefField.tpl";
   }
 
@@ -151,7 +171,7 @@ class ContactRefField extends AbstractField {
    * @param $submittedValues
    * @return array
    */
-  public function processConfiguration($submittedValues) {
+  public function processConfiguration($submittedValues): array {
     // Add the show_label to the configuration array.
     $configuration['limit_groups'] = $submittedValues['limit_groups'];
     $configuration['limit_contact_types'] = $submittedValues['limit_contact_types'];
@@ -169,7 +189,14 @@ class ContactRefField extends AbstractField {
    * @return mixed
    */
   public function exportConfiguration($configuration) {
-    $groupsApi = civicrm_api3('Group', 'get', array('is_active' => 1, 'options' => array('limit' => 0)));
+    try {
+      $groupsApi = civicrm_api3('Group', 'get', [
+        'is_active' => 1,
+        'options' => ['limit' => 0],
+      ]);
+    } catch (CiviCRM_API3_Exception $e) {
+      return $configuration;
+    }
     $groups = array();
     foreach($groupsApi['values'] as $group) {
       if (in_array($group['id'], $configuration['limit_groups'])) {
@@ -190,7 +217,14 @@ class ContactRefField extends AbstractField {
    * @return mixed
    */
   public function importConfiguration($configuration) {
-    $groupsApi = civicrm_api3('Group', 'get', array('is_active' => 1, 'options' => array('limit' => 0)));
+    try {
+      $groupsApi = civicrm_api3('Group', 'get', [
+        'is_active' => 1,
+        'options' => ['limit' => 0],
+      ]);
+    } catch (CiviCRM_API3_Exception $e) {
+      return $configuration;
+    }
     $groups = array();
     foreach($groupsApi['values'] as $group) {
       if (in_array($group['name'], $configuration['limit_groups'])) {

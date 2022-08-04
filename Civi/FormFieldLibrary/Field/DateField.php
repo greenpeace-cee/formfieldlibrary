@@ -6,31 +6,40 @@
 
 namespace Civi\FormFieldLibrary\Field;
 
+use CRM_Core_Exception;
+use CRM_Core_Form;
 use CRM_Formfieldlibrary_ExtensionUtil as E;
+use DateTime;
+use Exception;
 
 class DateField extends AbstractField {
 
   /**
    * Add the field to the form
    *
-   * @param \CRM_Core_Form $form
+   * @param CRM_Core_Form $form
    * @param $field
    */
-  public function addFieldToForm(\CRM_Core_Form $form, $field) {
-    $config = \CRM_Core_Config::singleton();
+  public function addFieldToForm(CRM_Core_Form $form, $field) {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
     }
     $prop['time'] = FALSE;
-    $form->add('datepicker', $field['name'], $field['title'], array(), $is_required, $prop);
+    try {
+      $form->add('datepicker', $field['name'], $field['title'], [], $is_required, $prop);
+    } catch (CRM_Core_Exception $e) {
+    }
 
     if (isset($field['configuration']['default_date'])) {
-      $date = new \DateTime($field['configuration']['default_date']);
-      $default_date = $date->format('Y-m-d H:i:s');
-      $form->setDefaults(array(
-        $field['name'] => $default_date,
-      ));
+      try {
+        $date = new DateTime($field['configuration']['default_date']);
+        $default_date = $date->format('Y-m-d H:i:s');
+        $form->setDefaults(array(
+          $field['name'] => $default_date,
+        ));
+      } catch (Exception $e) {
+      }
     }
   }
 
@@ -39,7 +48,7 @@ class DateField extends AbstractField {
    *
    * @return bool
    */
-  public function hasConfiguration() {
+  public function hasConfiguration(): bool {
     return true;
   }
 
@@ -49,10 +58,12 @@ class DateField extends AbstractField {
    *
    * @param \CRM_Core_Form $form
    * @param array $field
-   * @throws \Exception
    */
-  public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
-    $form->add('text', 'default_date', E::ts('Default Date'), array('class' => 'huge'), false);
+  public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    try {
+      $form->add('text', 'default_date', E::ts('Default Date'), ['class' => 'huge']);
+    } catch (CRM_Core_Exception $e) {
+    }
     if (isset($field['configuration'])) {
       $form->setDefaults(array(
         'default_date' => $field['configuration']['default_date'],
@@ -70,7 +81,7 @@ class DateField extends AbstractField {
    *
    * @return false|string
    */
-  public function getConfigurationTemplateFileName() {
+  public function getConfigurationTemplateFileName(): ?string {
     return "CRM/FormFieldLibrary/Form/Configuration/Date.tpl";
   }
 
@@ -78,11 +89,11 @@ class DateField extends AbstractField {
   /**
    * Process the submitted values and create a configuration array
    *
-   * @param $submittedValues   *
+   * @param $submittedValues
    * @return array
    */
-  public function processConfiguration($submittedValues) {
-    return array('default_date' => $submittedValues['default_date']);
+  public function processConfiguration($submittedValues): array {
+    return ['default_date' => $submittedValues['default_date']];
   }
 
   /**
@@ -92,11 +103,14 @@ class DateField extends AbstractField {
    * @param $submittedValues
    * @return array
    */
-  public function getSubmittedFieldValue($field, $submittedValues) {
+  public function getSubmittedFieldValue($field, $submittedValues): array {
     $value = null;
     if (isset($submittedValues[$field['name']])) {
-      $date = new \DateTime($submittedValues[$field['name']]);
-      $value = $date->format('Ymd');
+      try {
+        $date = new DateTime($submittedValues[$field['name']]);
+        $value = $date->format('Ymd');
+      } catch (Exception $e) {
+      }
     }
     return array('value' => $value);
   }
