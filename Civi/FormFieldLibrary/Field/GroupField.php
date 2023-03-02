@@ -95,7 +95,7 @@ class GroupField extends AbstractField {
 
     $groups = [];
     $groupApiParams['is_active'] = 1;
-    if (isset($field['configuration']['group_type']) && is_array($field['configuration']['group_type'])) {
+    if (isset($field['configuration']['group_type']) && is_array($field['configuration']['group_type']) && count($field['configuration']['group_type'])) {
       $groupApiParams['group_type'] = array('IN' => $field['configuration']['group_type']);
     }
     $groupApiParams['options']['limit'] = 0;
