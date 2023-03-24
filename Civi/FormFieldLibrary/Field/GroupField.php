@@ -30,7 +30,8 @@ class GroupField extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
-    // Add a drop down for group type
+    parent::buildConfigurationForm($form, $field);
+    // Add a drop-down for group type
     $group_types = [];
     try {
       $group_type_api = civicrm_api3('OptionValue', 'get', [
@@ -66,7 +67,7 @@ class GroupField extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
-    // Add the show_label to the configuration array.
+    $configuration = parent::processConfiguration($submittedValues);
     $configuration['group_type'] = $submittedValues['group_type'];
     return $configuration;
   }
@@ -86,8 +87,10 @@ class GroupField extends AbstractField {
    *
    * @param CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -112,8 +115,18 @@ class GroupField extends AbstractField {
         'class' => 'crm-select2 huge',
         'placeholder' => E::ts('- select -'),
       ]);
+      if ($this->areABVersionsEnabled($field)) {
+        $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+        $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+        $form->add('select', $field['name_ab'], $field['title'], $groups, $bVersionIsRequired, [
+          'style' => 'min-width:250px',
+          'class' => 'crm-select2 huge',
+          'placeholder' => E::ts('- select -'),
+        ]);
+      }
     } catch (CRM_Core_Exception $e) {
     }
+    return $field;
   }
 
 

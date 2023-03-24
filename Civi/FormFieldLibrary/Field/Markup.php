@@ -79,8 +79,10 @@ class Markup extends AbstractField {
    *
    * @param \CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -135,6 +137,7 @@ class Markup extends AbstractField {
       } catch (CRM_Core_Exception $e) {
       }
     }
+    return $field;
   }
 
   /**
@@ -142,11 +145,12 @@ class Markup extends AbstractField {
    *
    * @param $field
    * @param $submittedValues
+   * @param bool $isVersionA
    * @return array
    */
-  public function getSubmittedFieldValue($field, $submittedValues): array {
-    $return['message'] = $submittedValues[$field['name'].'_html_message'];
-    $return['subject'] = $submittedValues[$field['name'] . '_subject'] ?? '';
+  public function getSubmittedFieldValue($field, $submittedValues, bool $isVersionA=true): array {
+    $return['message'] = $submittedValues[$this->getSubmissionKey($field['name'].'_html_message', $field, $isVersionA)];
+    $return['subject'] = $submittedValues[$this->getSubmissionKey($field['name'] . '_subject', $field, $isVersionA)] ?? '';
     $return['message_plain_text'] = CRM_Utils_String::htmlToText($return['message']);
     return $return;
   }
@@ -156,12 +160,17 @@ class Markup extends AbstractField {
    *
    * @param $field
    * @param $submittedValues
+   * @param bool $isVersionA
    * @return bool
    */
-  public function isFieldValueSubmitted($field, $submittedValues): bool {
-    if (isset($submittedValues[$field['name'].'_html_message'])) {
+  public function isFieldValueSubmitted($field, $submittedValues, bool $isVersionA = true): bool {
+    if (isset($submittedValues[$this->getSubmissionKey($field['name'].'_html_message', $field, $isVersionA)])) {
       return true;
     }
+    return false;
+  }
+
+  public function areABVersionsEnabled(array $field): bool {
     return false;
   }
 

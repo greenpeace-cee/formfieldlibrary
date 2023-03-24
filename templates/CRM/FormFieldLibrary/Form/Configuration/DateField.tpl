@@ -1,4 +1,5 @@
 {crmScope extensionKey='formfieldlibrary'}
+{include file="CRM/FormFieldLibrary/Form/Configuration/AbstractField.tpl"}
 <div class="crm-section">
     <div class="label">{$form.default_date.label}</div>
     <div class="content">{$form.default_date.html}

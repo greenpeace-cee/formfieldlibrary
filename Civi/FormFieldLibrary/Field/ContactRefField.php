@@ -18,8 +18,10 @@ class ContactRefField extends AbstractField {
    *
    * @param CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -58,10 +60,17 @@ class ContactRefField extends AbstractField {
       'class' => 'huge',
     );
     $form->addEntityRef( $field['name'], $field['title'], $props, $is_required);
+    if ($this->areABVersionsEnabled($field)) {
+      $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+      $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+      $form->addEntityRef( $field['name_ab'], $field['title'], $props, $bVersionIsRequired);
+    }
     if (isset($configuration['default_contact']) && $configuration['default_contact']) {
       $defaults[$field['name']] = $configuration['default_contact'];
+      $defaults[$this->getSubmissionKey($field['name'], $field, FALSE)] = $configuration['default_contact'];
       $form->setDefaults($defaults);
     }
+    return $field;
   }
 
   /**
@@ -81,6 +90,7 @@ class ContactRefField extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    parent::buildConfigurationForm($form, $field);
     try {
       $groupsApi = civicrm_api3('Group', 'get', [
         'is_active' => 1,
@@ -172,7 +182,7 @@ class ContactRefField extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
-    // Add the show_label to the configuration array.
+    $configuration = parent::processConfiguration($submittedValues);
     $configuration['limit_groups'] = $submittedValues['limit_groups'];
     $configuration['limit_contact_types'] = $submittedValues['limit_contact_types'];
     $configuration['default_contact'] = $submittedValues['default_contact'];

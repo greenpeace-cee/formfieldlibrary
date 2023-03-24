@@ -19,8 +19,11 @@ class DateField extends AbstractField {
    *
    * @param CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   *
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -28,6 +31,11 @@ class DateField extends AbstractField {
     $prop['time'] = FALSE;
     try {
       $form->add('datepicker', $field['name'], $field['title'], [], $is_required, $prop);
+      if ($this->areABVersionsEnabled($field)) {
+        $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+        $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+        $form->add('datepicker', $field['name_ab'], $field['title'], [], $bVersionIsRequired, $prop);
+      }
     } catch (CRM_Core_Exception $e) {
     }
 
@@ -35,12 +43,13 @@ class DateField extends AbstractField {
       try {
         $date = new DateTime($field['configuration']['default_date']);
         $default_date = $date->format('Y-m-d H:i:s');
-        $form->setDefaults(array(
-          $field['name'] => $default_date,
-        ));
+        $defaults[$field['name']] = $default_date;
+        $defaults[$this->getSubmissionKey($field['name'], $field, FALSE)] = $default_date;
+        $form->setDefaults($defaults);
       } catch (Exception $e) {
       }
     }
+    return $field;
   }
 
   /**
@@ -60,6 +69,7 @@ class DateField extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    parent::buildConfigurationForm($form, $field);
     try {
       $form->add('text', 'default_date', E::ts('Default Date'), ['class' => 'huge']);
     } catch (CRM_Core_Exception $e) {
@@ -93,7 +103,9 @@ class DateField extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
-    return ['default_date' => $submittedValues['default_date']];
+    $configuration = parent::processConfiguration($submittedValues);
+    $configuration['default_date'] = $submittedValues['default_date'];
+    return $configuration;
   }
 
   /**
@@ -101,13 +113,14 @@ class DateField extends AbstractField {
    *
    * @param $field
    * @param $submittedValues
+   * @param bool $isVersionA
    * @return array
    */
-  public function getSubmittedFieldValue($field, $submittedValues): array {
+  public function getSubmittedFieldValue($field, $submittedValues, bool $isVersionA=true): array {
     $value = null;
-    if (isset($submittedValues[$field['name']])) {
+    if (isset($submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)])) {
       try {
-        $date = new DateTime($submittedValues[$field['name']]);
+        $date = new DateTime($submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)]);
         $value = $date->format('Ymd');
       } catch (Exception $e) {
       }

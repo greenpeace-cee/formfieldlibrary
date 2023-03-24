@@ -1,3 +1,4 @@
+{include file="CRM/FormFieldLibrary/Form/Configuration/AbstractField.tpl"}
 <div class="crm-section">
     <div class="label">{$form.option_group_id.label}</div>
     <div id="optgroup" class="content">{$form.option_group_id.html}</div>

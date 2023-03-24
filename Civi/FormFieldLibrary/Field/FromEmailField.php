@@ -26,8 +26,11 @@ class FromEmailField extends AbstractField {
    *
    * @param CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   *
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -54,11 +57,26 @@ class FromEmailField extends AbstractField {
         'class' => 'crm-select2 huge',
         'placeholder' => E::ts('- select -'),
       ]);
+      if ($this->areABVersionsEnabled($field)) {
+        $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+        $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+        $form->add('select', $field['name_ab'], $field['title'], $from_email, $bVersionIsRequired, [
+          'style' => 'min-width:250px',
+          'class' => 'crm-select2 huge',
+          'placeholder' => E::ts('- select -'),
+        ]);
+      }
     } catch (CRM_Core_Exception $e) {
     }
     $form->setDefaults(array(
       $field['name'] => $default_value,
     ));
+    if (isset($field['name_ab'])) {
+      $form->setDefaults(array(
+        $field['name_ab'] => $default_value,
+      ));
+    }
+    return $field;
   }
 
   /**
@@ -66,11 +84,12 @@ class FromEmailField extends AbstractField {
    *
    * @param $field
    * @param $submittedValues
+   * @param bool $isVersionA
    * @return array
    */
-  public function getSubmittedFieldValue($field, $submittedValues): array {
+  public function getSubmittedFieldValue($field, $submittedValues, bool $isVersionA=true): array {
     $return = [];
-    $fromEmailId = $submittedValues[$field['name']];
+    $fromEmailId = $submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)];
     try {
       $completeEmail = civicrm_api3('OptionValue', 'getsingle', ['id' => $fromEmailId])['label'];
       $return['from_email'] = $this->pluckEmail($completeEmail);

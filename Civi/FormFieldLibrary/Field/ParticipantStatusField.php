@@ -30,6 +30,7 @@ class ParticipantStatusField extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    parent::buildConfigurationForm($form, $field);
     $options = [];
     try {
       $optionApi = civicrm_api3('ParticipantStatusType', 'get', [
@@ -74,7 +75,7 @@ class ParticipantStatusField extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
-    // Add the show_label to the configuration array.
+    $configuration = parent::processConfiguration($submittedValues);
     $configuration['default_status_id'] = $submittedValues['default_status_id'];
     return $configuration;
   }
@@ -126,8 +127,10 @@ class ParticipantStatusField extends AbstractField {
    *
    * @param \CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -149,13 +152,28 @@ class ParticipantStatusField extends AbstractField {
         'class' => 'crm-select2 huge',
         'placeholder' => E::ts('- select -'),
       ]);
+      if ($this->areABVersionsEnabled($field)) {
+        $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+        $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+        $form->add('select', $field['name_ab'], $field['title'], $options, $bVersionIsRequired, [
+          'style' => 'min-width:250px',
+          'class' => 'crm-select2 huge',
+          'placeholder' => E::ts('- select -'),
+        ]);
+      }
     } catch (CRM_Core_Exception $e) {
     }
     if (isset($field['configuration'])) {
       $form->setDefaults(array(
         $field['name'] => $field['configuration']['default_status_id'],
       ));
+      if (isset($field['name_ab'])) {
+        $form->setDefaults(array(
+          $field['name_ab'] => $field['configuration']['default_status_id'],
+        ));
+      }
     }
+    return $field;
   }
 
 }

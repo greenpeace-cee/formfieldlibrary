@@ -18,8 +18,10 @@ class CampaignField extends AbstractField {
    *
    * @param CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -39,10 +41,19 @@ class CampaignField extends AbstractField {
       'select' => ['minimumInputLength' => 0]
     );
     $form->addEntityRef( $field['name'], $field['title'], $props, $is_required);
+
+    if ($this->areABVersionsEnabled($field)) {
+      $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+      $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, false);
+      $form->addEntityRef( $field['name_ab'], $field['title'], $props, $bVersionIsRequired);
+    }
+
     if (isset($configuration['default_campaign']) && $configuration['default_campaign']) {
       $defaults[$field['name']] = $configuration['default_campaign'];
+      $defaults[$this->getSubmissionKey($field['name'], $field, false)] = $configuration['default_campaign'];
       $form->setDefaults($defaults);
     }
+    return $field;
   }
 
   /**
@@ -62,6 +73,7 @@ class CampaignField extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    parent::buildConfigurationForm($form, $field);
     $api_params = array();
     $api_params['is_active'] = '1';
     $props = array(
@@ -105,7 +117,7 @@ class CampaignField extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
-    // Add the show_label to the configuration array.
+    $configuration = parent::processConfiguration($submittedValues);
     $configuration['default_campaign'] = $submittedValues['default_campaign'];
     return $configuration;
   }

@@ -23,7 +23,7 @@ abstract class AbstractField {
    * @return bool
    */
   public function hasConfiguration(): bool {
-    return false;
+    return true;
   }
 
   /**
@@ -34,8 +34,12 @@ abstract class AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=[]) {
-    // Example add a checkbox to the form.
-    // $form->add('checkbox', 'show_label', E::ts('Show label'));
+    $form->add('checkbox', 'enable_a_b_versions', E::ts('Enable A/B Versions'));
+    $defaults['enable_a_b_versions'] = '0';
+    if ($this->areABVersionsEnabled($field)) {
+      $defaults['enable_a_b_versions'] = '1';
+    }
+    $form->setDefaults($defaults);
   }
 
   /**
@@ -45,8 +49,7 @@ abstract class AbstractField {
    * @return false|string
    */
   public function getConfigurationTemplateFileName(): ?string {
-    // Example return "CRM/FormFieldLibrary/Form/FieldConfiguration/TextField.tpl";
-    return false;
+    return "CRM/FormFieldLibrary/Form/Configuration/AbstractField.tpl";
   }
 
 
@@ -57,10 +60,8 @@ abstract class AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
-    // Add the show_label to the configuration array.
-    // $configuration['show_label'] = $submittedValues['show_label'];
-    // return $configuration;
-    return [];
+    $configuration['enable_a_b_versions'] = $submittedValues['enable_a_b_versions'] ? '1' : '0';
+    return $configuration;
   }
 
   /**
@@ -94,9 +95,12 @@ abstract class AbstractField {
    *
    * @param \CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     // $form->add('text', $field['name'], $field['title'], $field['is_required']);
+    return $field;
   }
 
   /**
@@ -108,17 +112,26 @@ abstract class AbstractField {
     return "CRM/FormFieldLibrary/Field/GenericField.tpl";
   }
 
+  protected function isBVersionRequired(bool $isRequired, bool $abTestingEnabled, CRM_Core_Form $form): bool {
+    $bVersionIsRequired = $isRequired;
+    if ($form->isSubmitted() && !$abTestingEnabled) {
+      $bVersionIsRequired = false;
+    }
+    return $bVersionIsRequired;
+  }
+
 
   /**
    * Return the submitted field value
    *
    * @param $field
    * @param $submittedValues
+   * @param bool $isVersionA
    * @return array
    */
-  public function getSubmittedFieldValue($field, $submittedValues): array {
+  public function getSubmittedFieldValue($field, $submittedValues, bool $isVersionA=true): array {
     return [
-      'value' => $submittedValues[$field['name']]
+      'value' => $submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)]
     ];
   }
 
@@ -127,10 +140,39 @@ abstract class AbstractField {
    *
    * @param $field
    * @param $submittedValues
+   * @param bool $isVersionA
    * @return bool
    */
-  public function isFieldValueSubmitted($field, $submittedValues): bool {
-    return isset($submittedValues[$field['name']]);
+  public function isFieldValueSubmitted($field, $submittedValues, bool $isVersionA = true): bool {
+    return isset($submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)]);
+  }
+
+  /**
+   * Returns the submission key based on whether we need version A or Version B.
+   * By default Version A.
+   *
+   * @param string $name
+   * @param array $field
+   * @param bool $isVersionA
+   *
+   * @return string
+   */
+  protected function getSubmissionKey(string $name, array $field, bool $isVersionA = true): string {
+    if ($isVersionA || !$this->areABVersionsEnabled($field)) {
+      return $name;
+    } else {
+      return 'version_b_'.$name;
+    }
+  }
+
+  public function areABVersionsEnabled(array $field): bool {
+    if (!isset($field['configuration'])) {
+      return false;
+    }
+    if (!isset($field['configuration']['enable_a_b_versions'])) {
+      return false;
+    }
+    return (bool) $field['configuration']['enable_a_b_versions'];
   }
 
   /**

@@ -1,3 +1,4 @@
+{include file="CRM/FormFieldLibrary/Form/Configuration/AbstractField.tpl"}
 <div class="crm-section">
     <div class="label">{$form.limit_contact_types.label}</div>
     <div class="content">{$form.limit_contact_types.html}</div>

@@ -30,6 +30,7 @@ class MessageTemplate extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    parent::buildConfigurationForm($form, $field);
     $message_templates = [];
     try {
       $message_template_api = civicrm_api3('MessageTemplate', 'get', [
@@ -75,7 +76,9 @@ class MessageTemplate extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
-    return array('default_template' => $submittedValues['default_template']);
+    $configuration = parent::processConfiguration($submittedValues);
+    $configuration['default_template'] = $submittedValues['default_template'];
+    return $configuration;
   }
 
   /**
@@ -128,8 +131,10 @@ class MessageTemplate extends AbstractField {
    *
    * @param CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -153,13 +158,28 @@ class MessageTemplate extends AbstractField {
         'class' => 'crm-select2 huge',
         'placeholder' => E::ts('- select -'),
       ]);
+      if ($this->areABVersionsEnabled($field)) {
+        $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+        $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+        $form->add('select', $field['name_ab'], $field['title'], $message_templates, $bVersionIsRequired, [
+          'style' => 'min-width:250px',
+          'class' => 'crm-select2 huge',
+          'placeholder' => E::ts('- select -'),
+        ]);
+      }
     } catch (CRM_Core_Exception $e) {
     }
     if (isset($field['configuration']) && isset($field['configuration']['default_template'])) {
       $form->setDefaults(array(
         $field['name'] => $field['configuration']['default_template'],
       ));
+      if (isset($field['name_ab'])) {
+        $form->setDefaults(array(
+          $field['name_ab'] => $field['configuration']['default_template'],
+        ));
+      }
     }
+    return $field;
   }
 
   /**
@@ -167,10 +187,11 @@ class MessageTemplate extends AbstractField {
    *
    * @param $field
    * @param $submittedValues
+   * @param bool $isVersionA
    * @return array
    */
-  public function getSubmittedFieldValue($field, $submittedValues): array {
-    $messageTemplateId = $submittedValues[$field['name']];
+  public function getSubmittedFieldValue($field, $submittedValues, bool $isVersionA = true): array {
+    $messageTemplateId = $submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)];
     $return['id'] = $messageTemplateId;
     try {
       $messageTemplate = civicrm_api3('MessageTemplate', 'getsingle', ['id' => $messageTemplateId]);

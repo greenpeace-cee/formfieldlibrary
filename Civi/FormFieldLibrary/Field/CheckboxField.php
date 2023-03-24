@@ -17,8 +17,11 @@ class CheckboxField extends AbstractField {
    *
    * @param CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   *
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -26,15 +29,21 @@ class CheckboxField extends AbstractField {
     $prop['time'] = FALSE;
     try {
       $form->add('checkbox', $field['name'], $field['title'], [], $is_required, $prop);
+      if ($this->areABVersionsEnabled($field)) {
+        $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+        $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+        $form->add('checkbox', $field['name_ab'], $field['title'], [], $bVersionIsRequired, $prop);
+      }
     } catch (CRM_Core_Exception $e) {
-      return;
+      return field;
     }
 
     if (isset($field['configuration']['default_checked'])) {
-      $form->setDefaults(array(
-        $field['name'] => 1,
-      ));
+      $defaults[$field['name']] = '1';
+      $defaults[$this->getSubmissionKey($field['name'], $field, FALSE)] = '1';
+      $form->setDefaults($defaults);
     }
+    return $field;
   }
 
   /**
@@ -54,6 +63,7 @@ class CheckboxField extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    parent::buildConfigurationForm($form, $field);
     try {
       $form->add('checkbox', 'default_checked', E::ts('Default Checked'), []);
     } catch (CRM_Core_Exception $e) {
@@ -83,6 +93,7 @@ class CheckboxField extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
+    $configuration = parent::processConfiguration($submittedValues);
     return ['default_checked' => $submittedValues['default_checked']];
   }
 
@@ -91,11 +102,12 @@ class CheckboxField extends AbstractField {
    *
    * @param $field
    * @param $submittedValues
+   * @param bool $isVersionA
    * @return array
    */
-  public function getSubmittedFieldValue($field, $submittedValues): array {
+  public function getSubmittedFieldValue($field, $submittedValues, bool $isVersionA = true): array {
     $value = false;
-    if (!empty($submittedValues[$field['name']])) {
+    if (!empty($submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)])) {
       $value = true;
     }
     return ['value' => $value];

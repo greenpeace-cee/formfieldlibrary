@@ -32,6 +32,7 @@ class LocationTypeField extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=[]) {
+    parent::buildConfigurationForm($form, $field);
     $default_values = self::getLocationTypes();
     try {
       $form->add('select', 'default_value_id', E::ts('Default value'), $default_values, FALSE, [
@@ -66,6 +67,7 @@ class LocationTypeField extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
+    $configuration = parent::processConfiguration($submittedValues);
     $configuration['default_value_id'] = $submittedValues['default_value_id'];
     return $configuration;
   }
@@ -115,8 +117,10 @@ class LocationTypeField extends AbstractField {
    *
    * @param \CRM_Core_Form $form
    * @param $field
+   * @param bool $abTestingEnabled
+   * @return array
    */
-  public function addFieldToForm(CRM_Core_Form $form, $field) {
+  public function addFieldToForm(CRM_Core_Form $form, $field, bool $abTestingEnabled=false): array {
     $is_required = false;
     if (isset($field['is_required'])) {
       $is_required = $field['is_required'];
@@ -128,14 +132,28 @@ class LocationTypeField extends AbstractField {
         'class' => 'crm-select2 huge',
         'placeholder' => E::ts('- select -'),
       ]);
+      if ($this->areABVersionsEnabled($field)) {
+        $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+        $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+        $form->add('select', $field['name_ab'], $field['title'], $options, $bVersionIsRequired, [
+          'style' => 'min-width:250px',
+          'class' => 'crm-select2 huge',
+          'placeholder' => E::ts('- select -'),
+        ]);
+      }
     } catch (CRM_Core_Exception $e) {
     }
     if (isset($field['configuration']) && isset($field['configuration']['default_value_id'])) {
       $form->setDefaults([
         $field['name'] => $field['configuration']['default_value_id'],
       ]);
+      if (isset($field['name_ab'])) {
+        $form->setDefaults([
+          $field['name_ab'] => $field['configuration']['default_value_id'],
+        ]);
+      }
     }
-
+    return $field;
   }
 
   /**
