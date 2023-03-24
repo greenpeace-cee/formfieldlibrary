@@ -1,3 +1,4 @@
+{include file="CRM/FormFieldLibrary/Form/Configuration/AbstractField.tpl"}
 <div class="crm-section">
   <div class="label">{$form.enable_template.label}</div>
   <div class="content">{$form.enable_template.html}</div>

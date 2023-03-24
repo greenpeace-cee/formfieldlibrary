@@ -33,6 +33,7 @@ class Markup extends AbstractField {
    * @param array $field
    */
   public function buildConfigurationForm(CRM_Core_Form $form, array $field=array()) {
+    parent::buildConfigurationForm($form, $field);
     try {
       $form->add('checkbox', 'enable_template', E::ts('Enable template'), FALSE, []);
     } catch (CRM_Core_Exception $e) {
@@ -67,10 +68,10 @@ class Markup extends AbstractField {
    * @return array
    */
   public function processConfiguration($submittedValues): array {
-    return array(
-      'enable_template' => $submittedValues['enable_template'],
-      'enable_subject' => $submittedValues['enable_subject'],
-    );
+    $configuration = parent::processConfiguration($submittedValues);
+    $configuration['enable_template'] = $submittedValues['enable_template'];
+    $configuration['enable_subject'] = $submittedValues['enable_subject'];
+    return $configuration;
   }
 
 
@@ -98,6 +99,14 @@ class Markup extends AbstractField {
     //sorted in ascending order tokens by ignoring word case
     $form->assign('tokens_'.$field['name'], CRM_Utils_Token::formatTokensForDisplay($tokens));
 
+    if ($this->areABVersionsEnabled($field)) {
+      $field['name_ab'] = $this->getSubmissionKey($field['name'], $field, FALSE);
+      $subjectABField = $field['name_ab'].'_subject';
+      if (!$field['configuration']['enable_subject']) {
+        $subjectABField = '';
+      }
+    }
+
     $message_templates = [];
     try {
       $message_template_api = civicrm_api3('MessageTemplate', 'get', [
@@ -117,6 +126,14 @@ class Markup extends AbstractField {
         'placeholder' => E::ts('- select -'),
         'onChange' => "selectTemplate_{$field['name']}(this.value, '" . $field['name'] . "_html_message', '', '" . $subjectField . "');",
       ]);
+      if ($this->areABVersionsEnabled($field)) {
+        $form->add('select', $field['name_ab'] . '_template', E::ts('Template'), $message_templates, FALSE, [
+          'style' => 'min-width:250px',
+          'class' => 'crm-select2 huge',
+          'placeholder' => E::ts('- select -'),
+          'onChange' => "selectTemplate_{$field['name']}(this.value, '" . $field['name_ab'] . "_html_message', '', '" . $subjectABField . "');",
+        ]);
+      }
     } catch (CRM_Core_Exception $e) {
     }
 
@@ -125,6 +142,13 @@ class Markup extends AbstractField {
         'cols' => '80',
         'rows' => '8',
       ], $is_required);
+      if ($this->areABVersionsEnabled($field)) {
+        $bVersionIsRequired = $this->isBVersionRequired($is_required, $abTestingEnabled, $form);
+        $form->add('wysiwyg', $field['name_ab'] . '_html_message', E::ts('Message'), [
+          'cols' => '80',
+          'rows' => '8',
+        ], $bVersionIsRequired);
+      }
     } catch (CRM_Core_Exception $e) {
     }
     $subject_is_required = $is_required;
@@ -134,6 +158,10 @@ class Markup extends AbstractField {
     if ($subjectField) {
       try {
         $form->add('text', $field['name'] . '_subject', E::ts('Subject'), ['class' => 'huge'], $subject_is_required);
+        if ($this->areABVersionsEnabled($field)) {
+          $bVersionIsRequired = $this->isBVersionRequired($subject_is_required, $abTestingEnabled, $form);
+          $form->add('text', $field['name_ab'] . '_subject', E::ts('Subject'), ['class' => 'huge'], $bVersionIsRequired);
+        }
       } catch (CRM_Core_Exception $e) {
       }
     }
@@ -167,10 +195,6 @@ class Markup extends AbstractField {
     if (isset($submittedValues[$this->getSubmissionKey($field['name'].'_html_message', $field, $isVersionA)])) {
       return true;
     }
-    return false;
-  }
-
-  public function areABVersionsEnabled(array $field): bool {
     return false;
   }
 

@@ -1,10 +1,18 @@
 {crmScope extensionKey="formfieldlibrary"}
-{assign var="field_name" value=$field.name}
-{assign var="template" value="`$field_name`_template"}
-{assign var="html_message" value="`$field_name`_html_message"}
-{assign var="subject" value="`$field_name`_subject"}
-{capture assign="tokens"}{literal}{$tokens_{/literal}{$field_name}{literal}|@json_encode}{/literal}{/capture}
-
+{if (!isset($isAVersion) || $isAVersion)}
+    {assign var="field_name" value=$field.name}
+    {assign var="template" value="`$field_name`_template"}
+    {assign var="html_message" value="`$field_name`_html_message"}
+    {assign var="subject" value="`$field_name`_subject"}
+    {capture assign="tokens"}{literal}{$tokens_{/literal}{$field_name}{literal}|@json_encode}{/literal}{/capture}
+{/if}
+{if (isset($isAVersion) && !$isAVersion)}
+    {assign var="field_name" value=$field.name_ab}
+    {assign var="template" value="`$field_name`_template"}
+    {assign var="html_message" value="`$field_name`_html_message"}
+    {assign var="subject" value="`$field_name`_subject"}
+    {capture assign="tokens"}{literal}{$tokens_{/literal}{$field_name}{literal}|@json_encode}{/literal}{/capture}
+{/if}
 
 <div class="crm-accordion-wrapper crm-html_email-accordion ">
   <div class="crm-accordion-header">{$field.title}</div>
@@ -38,8 +46,7 @@
     </div>
   </div>
 </div>
-
-
+{if (!isset($isAVersion) || $isAVersion)}
 {literal}
 <script type="text/javascript">
   function selectTemplate_{/literal}{$field_name}{literal}( val, html_message, text_message, subject) {
@@ -83,4 +90,5 @@ CRM.$(function($) {
 });
 </script>
 {/literal}
+{/if}
 {/crmScope}
