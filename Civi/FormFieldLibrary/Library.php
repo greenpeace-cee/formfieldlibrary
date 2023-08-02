@@ -22,6 +22,7 @@ class Library {
     $this->addFieldType('checkbox', 'Civi\FormFieldLibrary\Field\CheckboxField', E::ts('Checkbox field'));
     $this->addFieldType('contact', 'Civi\FormFieldLibrary\Field\ContactRefField', E::ts('Contact Reference field'));
     $this->addFieldType('campaign', 'Civi\FormFieldLibrary\Field\CampaignField', E::ts('Campaign Field'));
+    $this->addFieldType('financial_type', 'Civi\FormFieldLibrary\Field\FinancialTypeField', E::ts('Financial Type Field'));
     $this->addFieldType('option_group', 'Civi\FormFieldLibrary\Field\OptionGroupField', E::ts('Option Group'));
     $this->addFieldType('location_type', 'Civi\FormFieldLibrary\Field\LocationTypeField', E::ts('Location Type'));
     $this->addFieldType('participant_status', 'Civi\FormFieldLibrary\Field\ParticipantStatusField', E::ts('Participant Status'));
