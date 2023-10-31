@@ -21,11 +21,20 @@ class Library {
     $this->addFieldType('money', 'Civi\FormFieldLibrary\Field\MoneyField', E::ts('Money field'));
     $this->addFieldType('checkbox', 'Civi\FormFieldLibrary\Field\CheckboxField', E::ts('Checkbox field'));
     $this->addFieldType('contact', 'Civi\FormFieldLibrary\Field\ContactRefField', E::ts('Contact Reference field'));
-    $this->addFieldType('campaign', 'Civi\FormFieldLibrary\Field\CampaignField', E::ts('Campaign Field'));
-    $this->addFieldType('financial_type', 'Civi\FormFieldLibrary\Field\FinancialTypeField', E::ts('Financial Type Field'));
+    if (Component::isEnabled('CiviContribute')) {
+      $this->addFieldType('campaign', 'Civi\FormFieldLibrary\Field\CampaignField', E::ts('Campaign Field'));
+    }
+    if (Component::isEnabled('CiviEvent')) {
+      $this->addFieldType('event', 'Civi\FormFieldLibrary\Field\EventField', E::ts('Event Field'));
+    }
+    if (Component::isEnabled('CiviContribute')) {
+      $this->addFieldType('financial_type', 'Civi\FormFieldLibrary\Field\FinancialTypeField', E::ts('Financial Type Field'));
+    }
     $this->addFieldType('option_group', 'Civi\FormFieldLibrary\Field\OptionGroupField', E::ts('Option Group'));
     $this->addFieldType('location_type', 'Civi\FormFieldLibrary\Field\LocationTypeField', E::ts('Location Type'));
-    $this->addFieldType('participant_status', 'Civi\FormFieldLibrary\Field\ParticipantStatusField', E::ts('Participant Status'));
+    if (Component::isEnabled('CiviEvent')) {
+      $this->addFieldType('participant_status', 'Civi\FormFieldLibrary\Field\ParticipantStatusField', E::ts('Participant Status'));
+    }
     $this->addFieldType('group', 'Civi\FormFieldLibrary\Field\GroupField', E::ts('Group'));
     $this->addFieldType('message_template', 'Civi\FormFieldLibrary\Field\MessageTemplate', E::ts('Message Template'));
     $this->addFieldType('markup', 'Civi\FormFieldLibrary\Field\Markup', E::ts('Markup / HTML'));
