@@ -203,6 +203,7 @@ class MessageTemplate extends AbstractField {
       } elseif (isset($messageTemplate['msg_text']) && !empty($messageTemplate['msg_text'])) {
         $return['body'] = $messageTemplate['msg_text'];
       }
+      $return['pdf_format_id'] = $messageTemplate['pdf_format_id'] ?? null;
     } catch (CiviCRM_API3_Exception $e) {
     }
     return $return;
@@ -221,6 +222,7 @@ class MessageTemplate extends AbstractField {
       'html_body' => E::ts('HTML Message'),
       'text_body' => E::ts('Text Message'),
       'subject' => E::ts('Subject'),
+      'pdf_format_id' => E::ts('PDF Format'),
       'id' => E::ts('ID'),
     ];
   }
