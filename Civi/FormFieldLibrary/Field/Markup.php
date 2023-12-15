@@ -46,32 +46,6 @@ class Markup extends AbstractField {
       $form->setDefaults(array(
         'enable_template' => $field['configuration']['enable_template'],
         'enable_subject' => $field['configuration']['enable_subject'],
-        'default_template' => $field['configuration']['default_template'],
-      ));
-    }
-    $message_templates = [];
-    try {
-      $message_template_api = civicrm_api3('MessageTemplate', 'get', [
-        'is_active' => 1,
-        'workflow_id' => ["IS NULL" => 1],
-        'options' => ['limit' => 0],
-      ]);
-      foreach ($message_template_api['values'] as $message_template) {
-        $message_templates[$message_template['id']] = $message_template['msg_title'];
-      }
-    } catch (CiviCRM_API3_Exception $e) {
-    }
-    try {
-      $form->add('select', 'default_template', E::ts('Default template'), $message_templates, FALSE, [
-        'style' => 'min-width:250px',
-        'class' => 'crm-select2 huge',
-        'placeholder' => E::ts('- select -'),
-      ]);
-    } catch (CRM_Core_Exception $e) {
-    }
-    if (isset($field['configuration'])) {
-      $form->setDefaults(array(
-        'default_template' => $field['configuration']['default_template'],
       ));
     }
   }
@@ -97,7 +71,6 @@ class Markup extends AbstractField {
     $configuration = parent::processConfiguration($submittedValues);
     $configuration['enable_template'] = $submittedValues['enable_template'];
     $configuration['enable_subject'] = $submittedValues['enable_subject'];
-    $configuration['default_template'] = $submittedValues['default_template'];
     return $configuration;
   }
 
@@ -190,24 +163,6 @@ class Markup extends AbstractField {
           $form->add('text', $field['name_ab'] . '_subject', E::ts('Subject'), ['class' => 'huge'], $bVersionIsRequired);
         }
       } catch (CRM_Core_Exception $e) {
-      }
-    }
-    if (isset($field['configuration']) && isset($field['configuration']['default_template'])) {
-      $messageTemplates = \Civi\Api4\MessageTemplate::get(FALSE)
-        ->addSelect('msg_subject', 'msg_html')
-        ->addWhere('id', '=', $field['configuration']['default_template'])
-        ->execute();
-      $form->setDefaults(array(
-        $field['name'] . '_template' => $field['configuration']['default_template'],
-        $field['name'] . '_subject' => $messageTemplates[0]['msg_subject'],
-        $field['name'] . '_html_message' => $messageTemplates[0]['msg_html'],
-      ));
-      if (isset($field['name_ab'])) {
-        $form->setDefaults(array(
-          $field['name_ab'] . '_template' => $field['configuration']['default_template'],
-          $field['name_ab'] . '_subject' => $messageTemplate[0]['msg_subject'],
-          $field['name_ab'] . '_html_message' => $messageTemplates[0]['msg_html'],
-        ));
       }
     }
     return $field;
