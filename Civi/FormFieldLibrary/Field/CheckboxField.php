@@ -35,10 +35,10 @@ class CheckboxField extends AbstractField {
         $form->add('checkbox', $field['name_ab'], $field['title'], [], $bVersionIsRequired, $prop);
       }
     } catch (CRM_Core_Exception $e) {
-      return field;
+      return $field;
     }
 
-    if (isset($field['configuration']['default_checked'])) {
+    if (!empty($field['configuration']['default_checked'])) {
       $defaults[$field['name']] = '1';
       $defaults[$this->getSubmissionKey($field['name'], $field, FALSE)] = '1';
       $form->setDefaults($defaults);
