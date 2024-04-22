@@ -16,6 +16,7 @@ class Library {
 
   public function __construct() {
     $this->addFieldType('date', 'Civi\FormFieldLibrary\Field\DateField', E::ts('Date field'));
+    $this->addFieldType('datetime', 'Civi\FormFieldLibrary\Field\DateTimeField', E::ts('Date and Time field'));
     $this->addFieldType('text', 'Civi\FormFieldLibrary\Field\TextField', E::ts('Text field'));
     $this->addFieldType('file_upload', 'Civi\FormFieldLibrary\Field\FileUploadField', E::ts('File Upload'));
     $this->addFieldType('money', 'Civi\FormFieldLibrary\Field\MoneyField', E::ts('Money field'));
