@@ -121,7 +121,7 @@ class DateTimeField extends AbstractField {
     if (isset($submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)])) {
       try {
         $date = new DateTime($submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)]);
-        $value = $date->format('Ymd');
+        $value = $date->format('YmdHis');
       } catch (Exception $e) {
       }
     }
