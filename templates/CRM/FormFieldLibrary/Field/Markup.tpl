@@ -1,18 +1,15 @@
 {crmScope extensionKey="formfieldlibrary"}
 {if (!isset($isAVersion) || $isAVersion)}
     {assign var="field_name" value=$field.name}
-    {assign var="template" value="`$field_name`_template"}
-    {assign var="html_message" value="`$field_name`_html_message"}
-    {assign var="subject" value="`$field_name`_subject"}
-    {capture assign="tokens"}{literal}{$tokens_{/literal}{$field_name}{literal}|@json_encode}{/literal}{/capture}
 {/if}
 {if (isset($isAVersion) && !$isAVersion)}
     {assign var="field_name" value=$field.name_ab}
-    {assign var="template" value="`$field_name`_template"}
-    {assign var="html_message" value="`$field_name`_html_message"}
-    {assign var="subject" value="`$field_name`_subject"}
-    {capture assign="tokens"}{literal}{$tokens_{/literal}{$field_name}{literal}|@json_encode}{/literal}{/capture}
 {/if}
+{assign var="template" value="`$field_name`_template"}
+{assign var="html_message" value="`$field_name`_html_message"}
+{assign var="subject" value="`$field_name`_subject"}
+{assign var="plaintext" value="`$field_name`_plaintext"}
+{capture assign="tokens"}{literal}{$tokens_{/literal}{$field_name}{literal}|@json_encode}{/literal}{/capture}
 
 <div class="crm-accordion-wrapper crm-html_email-accordion ">
   <div class="crm-accordion-header">{$field.title}</div>
@@ -44,6 +41,16 @@
       </div>
       <div class="clear"></div>
     </div>
+    {if $field.configuration.enable_plaintext}
+      <div class="crm-section">
+        <div class="label">{$form.$plaintext.label}</div>
+        <div class="content">
+          <input class="crm-token-selector big" data-field="{$plaintext}" /> <br />
+          {$form.$plaintext.html}
+        </div>
+        <div class="clear"></div>
+      </div>
+    {/if}
   </div>
 </div>
 {if (!isset($isAVersion) || $isAVersion)}

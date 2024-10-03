@@ -14,3 +14,8 @@
   <div class="content">{$form.enable_subject.html}</div>
   <div class="clear"></div>
 </div>
+<div class="crm-section">
+  <div class="label">{$form.enable_plaintext.label}</div>
+  <div class="content">{$form.enable_plaintext.html}</div>
+  <div class="clear"></div>
+</div>

@@ -42,12 +42,9 @@ class Markup extends AbstractField {
       $form->add('checkbox', 'enable_subject', E::ts('Enable subject'), FALSE, []);
     } catch (CRM_Core_Exception $e) {
     }
-    if (isset($field['configuration'])) {
-      $form->setDefaults(array(
-        'enable_template' => $field['configuration']['enable_template'],
-        'enable_subject' => $field['configuration']['enable_subject'],
-        'default_template' => $field['configuration']['default_template'],
-      ));
+    try {
+      $form->add('checkbox', 'enable_plaintext', E::ts('Enable Plain Text'), FALSE, []);
+    } catch (CRM_Core_Exception $e) {
     }
     $message_templates = [];
     try {
@@ -71,7 +68,10 @@ class Markup extends AbstractField {
     }
     if (isset($field['configuration'])) {
       $form->setDefaults(array(
+        'enable_template' => $field['configuration']['enable_template'],
+        'enable_subject' => $field['configuration']['enable_subject'],
         'default_template' => $field['configuration']['default_template'],
+        'enable_plaintext' => $field['configuration']['enable_plaintext'],
       ));
     }
   }
@@ -98,6 +98,7 @@ class Markup extends AbstractField {
     $configuration['enable_template'] = $submittedValues['enable_template'];
     $configuration['enable_subject'] = $submittedValues['enable_subject'];
     $configuration['default_template'] = $submittedValues['default_template'];
+    $configuration['enable_plaintext'] = $submittedValues['enable_plaintext'];
     return $configuration;
   }
 
@@ -120,6 +121,12 @@ class Markup extends AbstractField {
     if (!$field['configuration']['enable_subject']) {
       $subjectField = '';
     }
+    $plainTextField = $field['name'].'_plaintext';
+    $plainTextABField = $field['name'].'_plaintext';
+    if (!$field['configuration']['enable_plaintext']) {
+      $plainTextField = '';
+      $plainTextABField = '';
+    }
 
     //get the tokens.
     $tokens = CRM_Core_SelectValues::contactTokens();
@@ -131,6 +138,10 @@ class Markup extends AbstractField {
       $subjectABField = $field['name_ab'].'_subject';
       if (!$field['configuration']['enable_subject']) {
         $subjectABField = '';
+      }
+      $plainTextABField = $field['name_ab'].'_plaintext';
+      if (!$field['configuration']['enable_plaintext']) {
+        $plainTextABField = '';
       }
     }
 
@@ -151,14 +162,14 @@ class Markup extends AbstractField {
         'style' => 'min-width:250px',
         'class' => 'crm-select2 huge',
         'placeholder' => E::ts('- select -'),
-        'onChange' => "selectTemplate_{$field['name']}(this.value, '" . $field['name'] . "_html_message', '', '" . $subjectField . "');",
+        'onChange' => "selectTemplate_{$field['name']}(this.value, '" . $field['name'] . "_html_message', '" . $field['name'] . "_plaintext', '" . $subjectField . "');",
       ]);
       if ($this->areABVersionsEnabled($field)) {
         $form->add('select', $field['name_ab'] . '_template', E::ts('Template'), $message_templates, FALSE, [
           'style' => 'min-width:250px',
           'class' => 'crm-select2 huge',
           'placeholder' => E::ts('- select -'),
-          'onChange' => "selectTemplate_{$field['name']}(this.value, '" . $field['name_ab'] . "_html_message', '', '" . $subjectABField . "');",
+          'onChange' => "selectTemplate_{$field['name']}(this.value, '" . $field['name_ab'] . "_html_message', '" . $field['name_ab'] . "_plaintext', '" . $subjectABField . "');",
         ]);
       }
     } catch (CRM_Core_Exception $e) {
@@ -192,21 +203,34 @@ class Markup extends AbstractField {
       } catch (CRM_Core_Exception $e) {
       }
     }
+
+    if ($plainTextField) {
+      try {
+        $form->add('textarea', $plainTextField, E::ts('Plain Text'), ['cols' => '80', 'rows' => '8']);
+        if ($this->areABVersionsEnabled($field)) {
+          $form->add('textarea', $plainTextABField, E::ts('Plain Text'), ['cols' => '80', 'rows' => '8']);
+        }
+      } catch (CRM_Core_Exception $e) {
+      }
+    }
+
     if (isset($field['configuration']) && isset($field['configuration']['default_template'])) {
       $messageTemplates = \Civi\Api4\MessageTemplate::get(FALSE)
-        ->addSelect('msg_subject', 'msg_html')
+        ->addSelect('msg_subject', 'msg_html', 'msg_text')
         ->addWhere('id', '=', $field['configuration']['default_template'])
         ->execute();
       $form->setDefaults(array(
         $field['name'] . '_template' => $field['configuration']['default_template'],
         $field['name'] . '_subject' => $messageTemplates[0]['msg_subject'],
         $field['name'] . '_html_message' => $messageTemplates[0]['msg_html'],
+        $field['name'] . '_plaintext' => $messageTemplates[0]['msg_text'],
       ));
       if (isset($field['name_ab'])) {
         $form->setDefaults(array(
           $field['name_ab'] . '_template' => $field['configuration']['default_template'],
-          $field['name_ab'] . '_subject' => $messageTemplate[0]['msg_subject'],
+          $field['name_ab'] . '_subject' => $messageTemplates[0]['msg_subject'],
           $field['name_ab'] . '_html_message' => $messageTemplates[0]['msg_html'],
+          $field['name_ab'] . '_plaintext' => $messageTemplates[0]['msg_text'],
         ));
       }
     }
@@ -224,7 +248,10 @@ class Markup extends AbstractField {
   public function getSubmittedFieldValue($field, $submittedValues, bool $isVersionA=true): array {
     $return['message'] = $submittedValues[$this->getSubmissionKey($field['name'].'_html_message', $field, $isVersionA)];
     $return['subject'] = $submittedValues[$this->getSubmissionKey($field['name'] . '_subject', $field, $isVersionA)] ?? '';
-    $return['message_plain_text'] = CRM_Utils_String::htmlToText($return['message']);
+    $return['message_plain_text'] = $submittedValues[$this->getSubmissionKey($field['name'] . '_plaintext', $field, $isVersionA)] ?? '';
+    if (!$field['configuration']['enable_plaintext']) {
+      $return['message_plain_text'] = CRM_Utils_String::htmlToText($return['message']);
+    }
     return $return;
   }
 
