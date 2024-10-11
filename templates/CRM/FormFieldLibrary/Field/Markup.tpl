@@ -60,7 +60,7 @@
     if (subject) {
       document.getElementById(subject).value ="";
     }
-    if (text_message) {
+    if (text_message && document.getElementById(text_message)) {
       document.getElementById(text_message).value ="";
     }
     CRM.wysiwyg.setVal('#' + html_message, '');
@@ -70,7 +70,7 @@
         if (subject) {
           document.getElementById(subject).value = data.msg_subject;
         }
-        if (text_message) {
+        if (text_message && document.getElementById(text_message)) {
           document.getElementById(text_message).value = data.msg_text;
         }
         CRM.wysiwyg.setVal('#' + html_message, data.msg_html);
