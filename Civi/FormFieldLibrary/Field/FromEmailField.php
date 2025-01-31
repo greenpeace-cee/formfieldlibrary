@@ -41,6 +41,7 @@ class FromEmailField extends AbstractField {
       $fromemail_api = civicrm_api3('OptionValue', 'get', [
         'is_active' => 1,
         'option_group_id' => "from_email_address",
+        'domain_id' => 'current_domain',
         'options' => ['limit' => 0],
       ]);
       foreach($fromemail_api['values'] as $value) {
