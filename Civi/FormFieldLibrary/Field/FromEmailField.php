@@ -91,7 +91,7 @@ class FromEmailField extends AbstractField {
     $return = [];
     $fromEmailId = $submittedValues[$this->getSubmissionKey($field['name'], $field, $isVersionA)];
     try {
-      $completeEmail = civicrm_api3('OptionValue', 'getsingle', ['id' => $fromEmailId])['label'];
+      $completeEmail = civicrm_api3('OptionValue', 'getsingle', ['id' => $fromEmailId, 'option_group_id' => 'from_email_address'])['label'];
       $return['from_email'] = $this->pluckEmail($completeEmail);
       $return['from_name']  = $this->pluckName($completeEmail);
     } catch (CiviCRM_API3_Exception $e) {
